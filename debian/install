@@ -1,0 +1,2 @@
+*.el usr/share/emacs/site-lisp/linphone-el
+*.wav usr/share/sounds/linphone-el

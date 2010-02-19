@@ -1,0 +1,15 @@
+Source: linphone-el
+Section: sound
+Priority: optional
+Maintainer: Igor B. Poretsky <poretsky@mlbox.ru>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.3
+
+Package: linphone-el
+Architecture: all
+Depends: alsa-utils, emacs, linphone-nox, ${misc:Depends}
+Description: Emacs interface for Linphone
+ This package provides more or less intuitive and simple Emacs interface
+ for well-known network telephone program named Linphone. It actually
+ uses linphonec executable (that is console version of Linphone)
+ as a backend.

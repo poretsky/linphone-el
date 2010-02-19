@@ -1,0 +1,20 @@
+The Debian Package linphone-el
+----------------------------
+
+You can activate Linphone in Emacs either via menu or by typing
+"M-x linphone <RET>". The control panel with several buttons
+will be popped up. To make an outgoing call press "Call" button.
+If you just want to stand by waiting for incoming calls,
+press "Standby" button. The control panel will vanish
+and Linphone will continue proceeding in background.
+When incoming call will be encountered, corresponding control panel
+will appear in a separate window. Then you can switch to this window
+and accept or reject the call by pressing an appropriate button.
+
+Note!
+
+This interface doesn't allow configuring the backend program itself.
+You should do it either using native means or by editing it's
+configuration file directly.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Fri, 19 Feb 2010 02:57:54 +0300
