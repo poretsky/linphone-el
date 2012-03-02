@@ -1,3 +1,10 @@
+linphone-el (1.2) unstable; urgency=low
+
+  * Source directory added to the load path to allow source access
+    from help screens.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Fri, 02 Mar 2012 21:48:34 +0400
+
 linphone-el (1.1) unstable; urgency=low
 
   * Dependencies corrected according to the Debian policy for Emacs
