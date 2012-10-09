@@ -3,7 +3,7 @@ Section: sound
 Priority: optional
 Maintainer: Igor B. Poretsky <poretsky@mlbox.ru>
 Build-Depends: debhelper (>= 5)
-Standards-Version: 3.7.3
+Standards-Version: 3.9.3
 
 Package: linphone-el
 Architecture: all
