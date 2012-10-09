@@ -12,7 +12,9 @@ configure-stamp:
 	touch configure-stamp
 
 
-build: build-stamp
+build: build-arch build-indep
+build-arch: build-stamp
+build-indep: build-stamp
 
 build-stamp: configure-stamp 
 	dh_testdir
@@ -28,14 +30,8 @@ clean:
 	dh_clean 
 
 
-install: build
-	dh_testdir
-	dh_testroot
-	dh_clean -k 
-
-
 # Build architecture-independent files here.
-binary-indep: build install
+binary-indep: build-indep
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs 
@@ -51,8 +47,8 @@ binary-indep: build install
 
 
 # Build architecture-dependent files here.
-binary-arch: build install
+binary-arch: build-arch
 
 
 binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install configure
+.PHONY: build clean binary-indep binary-arch binary configure
