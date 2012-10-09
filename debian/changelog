@@ -1,3 +1,11 @@
+linphone-el (1.2.1lucid1) lucid; urgency=low
+
+  * Per distribution build.
+  * Lintian complaints satisfied.
+  * Bumped standards version to 3.9.3.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Tue, 09 Oct 2012 06:04:32 +0400
+
 linphone-el (1.2) unstable; urgency=low
 
   * Source directory added to the load path to allow source access
