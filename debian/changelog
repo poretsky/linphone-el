@@ -1,3 +1,11 @@
+linphone-el (1.2.2squeeze1) squeeze; urgency=low
+
+  * Source directory is now not included into the load path, but
+    symlinks to the source files are preserved to make them available
+    from help view.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Tue, 30 Oct 2012 22:17:56 +0400
+
 linphone-el (1.2.1squeeze1) squeeze; urgency=low
 
   * Per distribution build.
