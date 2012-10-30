@@ -18,10 +18,9 @@
   ;; If package-dir does not exist, the linphone-el package must have
   ;; removed but not purged, and we should skip the setup.
   (when (file-directory-p package-dir)
-    (add-to-list 'load-path package-dir)
-    ;; Make sure that the uncompiled files are also in the load-path, near the
-    ;; end.  This is for moving point to the code when view help.
-    (add-to-list 'load-path "/usr/share/emacs/site-lisp/linphone-el" t)
+    (if (fboundp 'debian-pkg-add-load-path-item)
+        (debian-pkg-add-load-path-item package-dir)
+      (add-to-list 'load-path package-dir))
     (setq linphone-sounds-directory "/usr/share/sounds/linphone-el/")
     (define-key global-map [menu-bar linphone] '("Linphone" . linphone))
     (autoload 'linphone "linphone" "Internet telephone" t)))

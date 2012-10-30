@@ -21,14 +21,16 @@ ELCDIR=/usr/share/${FLAVOR}/site-lisp/${PACKAGE}
 
 install -m 755 -d ${ELCDIR}
 cd ${ELDIR}
-FILES=`echo *.el`
-cp ${FILES} ${ELCDIR}
+src=`echo *.el`
 cd ${ELCDIR}
+for file in $src
+do ln -s ../../../emacs/site-lisp/${PACKAGE}/$file
+done
 
 cat << EOF > path.el
 (setq load-path (cons "." load-path) byte-compile-warnings nil)
 EOF
-${FLAVOR} ${FLAGS} ${FILES}
-rm -f *.el
+${FLAVOR} ${FLAGS} ${src}
+rm -f path.el
 
 exit 0
