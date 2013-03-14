@@ -70,79 +70,212 @@
 (eval-when-compile
   (require 'wid-edit))
 
+(autoload 'linphone-log-acquire "linphone-log")
+(autoload 'linphone-log-show "linphone-log")
+
 ;;}}}
 ;;{{{ Customizations
+
+(defvar linphone-sounds-directory (file-name-directory load-file-name)
+  "Directory where sound icons are stored.")
 
 (defgroup linphone nil
   "Internet telephone."
   :group 'applications)
 
+(defgroup linphone-sounds nil
+  "Sound icons for various events."
+  :group 'linphone)
+
+(defgroup linphone-backend nil
+  "External backend programs setup.
+Don't touch this stuff if unsure."
+  :group 'linphone)
+
+(defcustom linphone-online-sound (expand-file-name "online.wav" linphone-sounds-directory)
+  "Sound file played when going online."
+  :type '(choice (const :tag "No sound")
+                 (file :must-match t))
+  :group 'linphone-sounds)
+
+(defcustom linphone-offline-sound (expand-file-name "offline.wav" linphone-sounds-directory)
+  "Sound file played when going offline."
+  :type '(choice (const :tag "No sound")
+                 (file :must-match t))
+  :group 'linphone-sounds)
+
+(defcustom linphone-hangup-sound (expand-file-name "hangup.wav" linphone-sounds-directory)
+  "Sound file played when call is finished or connection is lost."
+  :type '(choice (const :tag "No sound")
+                 (file :must-match t))
+  :group 'linphone-sounds)
+
 (defcustom linphone-backend-program "linphonec"
   "Backend executable program name."
   :type 'string
-  :group 'linphone)
+  :group 'linphone-backend)
 
 (defcustom linphone-mute-command "amixer set Capture,0 nocap"
   "Shell command that effectively mutes microphone."
   :type 'string
-  :group 'linphone)
+  :group 'linphone-backend)
 
 (defcustom linphone-unmute-command "amixer set Capture,0 cap"
   "Shell command that effectively unmutes microphone."
   :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-mic-tune-command "amixer set Capture,0 %d%%"
+  "Format of the shell command to control microphone gain.
+This format specification must have one placeholder for numeric
+parameter to be replaced by actual gain value."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-sound-play-program "aplay"
+  "Program used to play audio icons."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-sound-play-args '("-q")
+  "List of additional arguments for sound playing command."
+  :type '(repeat string)
+  :group 'linphone-backend)
+
+(defcustom linphone-call-command "call %s"
+  "Linphone call command format.
+The string placeholder is to be replaced by the actual target address."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-answer-command "answer"
+  "Linphone answer incoming call command string."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-cancel-command "terminate"
+  "Linphone current call cancellation command string."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-quit-command "quit"
+  "Linphone quit command string."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-log-command "call-logs"
+  "Linphone call logs command string."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-prompt-pattern "^linphonec> "
+  "Regular expression that matches against Linphone backend prompt."
+  :type 'regexp
+  :group 'linphone-backend)
+
+(defcustom linphone-call-request-pattern "^\\(.*\\) is contacting you"
+  "Regular expression that matches against incoming call request."
+  :type 'regexp
+  :group 'linphone-backend)
+
+(defcustom linphone-call-progress-pattern "^Contacting \\(.*\\)$"
+  "Regular expression that matches progress notification message."
+  :type 'regexp
+  :group 'linphone-backend)
+
+(defcustom linphone-call-connection-pattern "Connected"
+  "Regular expression that matches against connection acknowledge."
+  :type 'regexp
+  :group 'linphone-backend)
+
+(defcustom linphone-call-failure-pattern
+  "User is temporarily unavailable\
+\\|Not Acceptable Here\
+\\|Forbidden\
+\\|Could not reach destination\
+\\|Terminate current call first\
+\\|Request Timeout\
+\\|Call declined\
+\\|Internal Server Error\
+\\|Bad request"
+  "Regular expression that matches against call failure messages."
+  :type 'regexp
+  :group 'linphone-backend)
+
+(defcustom linphone-call-termination-pattern "Call \\(terminat\\|end\\)ed\\|No active call"
+  "Regular expression that matches against call termination message."
+  :type 'regexp
+  :group 'linphone-backend)
+
+(defcustom linphone-online-state-string "successful"
+  "Online status indication string."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-offline-state-pattern "failed"
+  "Regular expression that matches against offline indication strings."
+  :type 'regexp
+  :group 'linphone-backend)
+
+(defcustom linphone-registration-result-pattern "Registration on .* \\(%s\\)"
+  "Regular expression pattern that matches against registration result
+messages. The string placeholder is to be replaced by the status
+matching regexp constructed from the online and offline patterns."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-mic-gain nil
+  "Microphone gain level in percents.
+The value must be in the range 0 through 100 inclusively.
+if nil is specified, then the current level will be left untouched."
+  :type '(choice (const :tag "Untouched" nil)
+                 (integer :tag "Explicit value in percents"))
+  :initialize 'custom-initialize-default
+  :set (lambda (symbol value)
+         (when value
+           (when (or (< value 0) (> value 100))
+             (error "Linphone microphone gain value is out of range"))
+           (call-process-shell-command (format linphone-mic-tune-command value)))
+         (custom-set-default symbol value))
+  :set-after '(linphone-mic-tune-command)
   :group 'linphone)
 
 ;;}}}
 ;;{{{ Utilities
 
-(defvar linphone-sounds-directory (file-name-directory load-file-name)
-  "Directory where sound icons are stored.")
-
-(defvar linphone-sound-play-program "aplay"
-  "Program used to play audio icons.")
-
-(defvar linphone-online-sound (expand-file-name "online.wav" linphone-sounds-directory)
-  "Sound played when going online.")
-
-(defvar linphone-offline-sound (expand-file-name "offline.wav" linphone-sounds-directory)
-  "Sound played when going offline.")
-
-(defvar linphone-hangup-sound (expand-file-name "hangup.wav" linphone-sounds-directory)
-  "Sound played when connection is lost.")
+(defvar linphone-mic-muted nil
+  "Indicates that the microphone is muted.")
 
 (defun linphone-play-sound (icon)
   "Play a sound icon."
-  (call-process linphone-sound-play-program
-                nil 0 nil "-q" icon))
+  (when icon
+    (apply 'call-process linphone-sound-play-program
+           nil 0 nil
+           (append linphone-sound-play-args (list icon)))))
 
 (defun linphone-mute ()
   "Mute microphone."
+  (setq linphone-mic-muted t)
   (call-process-shell-command linphone-mute-command))
 
 (defun linphone-unmute ()
   "Unmute microphone."
+  (setq linphone-mic-muted nil)
+  (when (numberp linphone-mic-gain)
+    (call-process-shell-command (format linphone-mic-tune-command linphone-mic-gain)))
   (call-process-shell-command linphone-unmute-command))
 
 ;;}}}
 ;;{{{ Backend commands
-
-(defconst linphone-call-command "call %s"
-  "Linphone call command format.")
-
-(defconst linphone-answer-command "answer"
-  "Linphone answer incoming call command string.")
-
-(defconst linphone-cancel-command "terminate"
-  "Linphone current call cancellation command string.")
-
-(defconst linphone-quit-command "quit"
-  "Linphone quit command string.")
 
 (defvar linphone-process nil
   "The Linphone backend process handle.")
 
 (defvar linphone-backend-ready nil
   "Indicates that Linphone backend is ready to accept commands.")
+
+(defvar linphone-log-requested nil
+  "Indicates that calls log was requested.")
 
 (defun linphone-command (command)
   "Send given string as a command to the Linphone backend."
@@ -156,10 +289,15 @@
     (error "No running Linphone backend")))
 
 (defun linphone-call (addr)
-  "Arrange outgoing call to specified address."
+  "Arrange an outgoing call to specified address."
   (interactive "sAddress to call: ")
   (linphone-command
    (format linphone-call-command addr)))
+
+(defun linphone-refresh-log ()
+  "Refresh log info."
+  (linphone-command linphone-log-command)
+  (setq linphone-log-requested t))
 
 ;;}}}
 ;;{{{ Major mode definition
@@ -179,8 +317,14 @@ Navigate around and press buttons.
 ;;}}}
 ;;{{{ Control widgets
 
+(defvar linphone-current-control nil
+  "Current control panel popup function.")
+
+(defvar linphone-log-visible nil
+  "Linphone log visibility status.")
+
 (defconst linphone-control-panel "*Linphone*"
-  "Name of buffer for Linphone control widgets.")
+  "Name of the buffer for Linphone control widgets.")
 
 (defvar linphone-backend-response nil
   "Save last significant backend response.")
@@ -200,13 +344,13 @@ Navigate around and press buttons.
     (when (fboundp 'remove-overlays)
       (remove-overlays))
     (linphone-control-mode)
-    (widget-insert header "\n")))
+    (widget-insert header "\n\n")))
 
 (defun linphone-mute-button ()
   "Mute/unmute button."
   (widget-create 'toggle
                  :tag "Microphone"
-                 :value t
+                 :value (not linphone-mic-muted)
                  :on "Mute"
                  :off "Unmute"
                  :format "%t: %[[%v]%]"
@@ -273,6 +417,31 @@ Navigate around and press buttons.
                            (customize-group 'linphone))
                  "Customize"))
 
+(defun linphone-toggle-log-visibility-button ()
+  "Toggle log visibility button."
+  (widget-create 'toggle
+                 :tag "calls history"
+                 :value linphone-log-visible
+                 :on "Hide"
+                 :off "Show"
+                 :format "%[[%v %t]%]"
+                 :notify (lambda (widget &rest ignore)
+                           (setq linphone-log-visible (widget-value widget))
+                           (if linphone-log-visible
+                               (linphone-refresh-log)
+                             (let ((position (point)))
+                               (funcall linphone-current-control)
+                               (goto-char position))))))
+
+(defun linphone-panel-bottom ()
+  "Make up a panel bottom part."
+  (widget-insert "\n")
+  (linphone-toggle-log-visibility-button)
+  (when linphone-log-visible
+    (widget-insert "\n\n")
+    (linphone-log-show))
+  (widget-insert "\n"))
+
 (defun linphone-general-control ()
   "General control panel popup."
   (linphone-arrange-control-panel "Internet telephone")
@@ -285,6 +454,7 @@ Navigate around and press buttons.
     (widget-insert "    ")
     (linphone-customize-button)
     (widget-insert "\n")
+    (linphone-panel-bottom)
     (widget-setup)
     (widget-forward 1))
   (pop-to-buffer linphone-control-panel))
@@ -322,6 +492,7 @@ Navigate around and press buttons.
     (widget-insert "\n")
     (linphone-mute-button)
     (widget-insert "\n")
+    (linphone-panel-bottom)
     (widget-setup)
     (widget-backward 1))
   (pop-to-buffer linphone-control-panel))
@@ -350,48 +521,8 @@ Navigate around and press buttons.
 ;;}}}
 ;;{{{ Parsing backend responses
 
-(defconst linphone-prompt-pattern "^linphonec> "
-  "Regular expression that matches against Linphone backend prompt.")
-
-(defconst linphone-call-request-pattern "^\\(.*\\) is contacting you"
-  "Regular expression that matches against incoming call request.")
-
-(defconst linphone-call-progress-pattern "^Contacting \\(.*\\)$"
-  "Regular expression that matches progress notification message.")
-
-(defconst linphone-call-connection-pattern "Connected"
-  "Regular expression that matches against connection acknowledge.")
-
-(defconst linphone-call-failure-pattern
-  "User is temporarily unavailable\
-\\|Not Acceptable Here\
-\\|Forbidden\
-\\|Could not reach destination\
-\\|Terminate current call first\
-\\|Request Timeout\
-\\|Call declined\
-\\|Internal Server Error\
-\\|Bad request"
-  "Regular expression that matches against call failure messages.")
-
-(defconst linphone-call-termination-pattern "Call \\(terminat\\|end\\)ed\\|No active call"
-  "Regular expression that matches against call termination message.")
-
-(defconst linphone-online-state-string "successful"
-  "Online status indication string.")
-
-(defconst linphone-registration-result-pattern
-  (format "Registration on .* \\(%s\\|failed\\)" linphone-online-state-string)
-  "Regular expression that matches against registration result messages.")
-
-(defconst linphone-offline-pattern "Registration on .* failed"
-  "Regular expression that matches against offline indication messages.")
-
 (defvar linphone-online nil
   "Indicates Linphone online state.")
-
-(defvar linphone-current-control nil
-  "Current control panel popup function.")
 
 (defvar linphone-control-change nil)
 
@@ -404,19 +535,24 @@ Navigate around and press buttons.
       (replace-match "")
       (setq linphone-backend-ready t))
     (goto-char (point-max))
-    (when (re-search-backward linphone-registration-result-pattern nil t)
+    (when (re-search-backward (format linphone-registration-result-pattern
+                                      (concat linphone-online-state-string
+                                              "\\|" linphone-offline-state-pattern))
+                              nil t)
       (if (string-equal (match-string 1) linphone-online-state-string)
           (unless linphone-online
             (setq linphone-online t)
             (linphone-play-sound linphone-online-sound)
             (message "%s" (match-string 0)))
         (when linphone-online
-          (setq linphone-online nil)
-          (linphone-play-sound linphone-offline-sound)
-          (message "%s" (match-string 0)))))
+          (setq linphone-online nil))
+        (linphone-play-sound linphone-offline-sound)
+        (message "%s" (match-string 0))))
     (goto-char (point-max))
     (setq linphone-control-change
           (cond
+           (linphone-log-requested
+            (linphone-log-acquire) t)
            ((re-search-backward linphone-call-connection-pattern nil t)
             (linphone-unmute)
             (setq linphone-call-active t)
@@ -442,8 +578,12 @@ Navigate around and press buttons.
     (forward-line 0)
     (delete-region (point-min) (point))
     (set-marker (process-mark proc) (point-max)))
-  (when (and linphone-current-control linphone-control-change)
-    (funcall linphone-current-control)))
+  (let ((position (and linphone-log-requested (string-equal (buffer-name) linphone-control-panel) (point))))
+    (setq linphone-log-requested nil)
+    (when (and linphone-current-control linphone-control-change)
+      (funcall linphone-current-control)
+      (when position
+        (goto-char position)))))
 
 ;;}}}
 ;;{{{ Backend process control
@@ -485,11 +625,12 @@ Start the backend program if necessary and popup control panel."
            (eq (process-status linphone-process) 'run))
       (if (get-buffer linphone-control-panel)
           (pop-to-buffer linphone-control-panel)
-        (if linphone-current-control
-            (funcall linphone-current-control)
-          (linphone-general-control)))
+        (unless linphone-current-control
+          (setq linphone-current-control 'linphone-general-control))
+        (funcall linphone-current-control))
     (linphone-launch)
-    (linphone-general-control)))
+    (setq linphone-current-control 'linphone-general-control)
+    (funcall linphone-current-control)))
 
 ;;}}}
 
