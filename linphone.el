@@ -426,8 +426,7 @@ Navigate around and press buttons.
                  :off "Show"
                  :format "%[[%v %t]%]"
                  :notify (lambda (widget &rest ignore)
-                           (setq linphone-log-visible (widget-value widget))
-                           (if linphone-log-visible
+                           (if (setq linphone-log-visible (widget-value widget))
                                (linphone-refresh-log)
                              (let ((position (point)))
                                (funcall linphone-current-control)
@@ -438,7 +437,7 @@ Navigate around and press buttons.
   (widget-insert "\n")
   (linphone-toggle-log-visibility-button)
   (when linphone-log-visible
-    (widget-insert "\n\n")
+    (widget-insert "\n")
     (linphone-log-show))
   (widget-insert "\n"))
 
