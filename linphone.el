@@ -389,8 +389,8 @@ Navigate around and press buttons.
                            (condition-case nil
                                (kill-buffer-and-window)
                              (error nil))
-                           (set-process-filter linphone-process t)
-                           (linphone-command linphone-quit-command))
+                           (linphone-command linphone-quit-command)
+                           (setq linphone-process nil))
                  "Quit"))
 
 (defun linphone-standby-button ()
@@ -555,6 +555,8 @@ Navigate around and press buttons.
     (goto-char (point-max))
     (setq linphone-control-change
           (cond
+           ((null linphone-process)
+            (kill-process) nil)
            (linphone-log-requested
             (linphone-log-acquire) t)
            ((re-search-backward linphone-call-connection-pattern nil t)
@@ -615,6 +617,7 @@ Navigate around and press buttons.
     (setq linphone-backend-ready nil)
     (setq linphone-online nil)
     (setq linphone-call-active nil)
+    (setq linphone-log-requested nil)
     (set-process-filter linphone-process 'linphone-output-parser)
     (set-process-sentinel linphone-process 'linphone-sentinel)))
 
