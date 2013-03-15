@@ -88,8 +88,8 @@
   :group 'linphone)
 
 (defgroup linphone-backend nil
-  "External backend programs setup.
-Don't touch this stuff if unsure."
+  "Communications with external backend programs.
+Don't touch this stuff unless you really know what you are doing."
   :group 'linphone)
 
 (defcustom linphone-online-sound (expand-file-name "online.wav" linphone-sounds-directory)
@@ -113,6 +113,11 @@ Don't touch this stuff if unsure."
 (defcustom linphone-backend-program "linphonec"
   "Backend executable program name."
   :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-backend-args '("--pipe")
+  "List of additional arguments for the backend program."
+  :type '(repeat string)
   :group 'linphone-backend)
 
 (defcustom linphone-mute-command "amixer set Capture,0 nocap"
@@ -601,9 +606,9 @@ Navigate around and press buttons.
   (let ((process-connection-type t)
         (default-directory (file-name-as-directory (getenv "HOME"))))
     (setq linphone-process
-          (start-process "Linphone backend"
-                         (get-buffer-create linphone-buffer)
-                         linphone-backend-program)))
+          (apply 'start-process "Linphone backend"
+                 (get-buffer-create linphone-buffer)
+                 linphone-backend-program linphone-backend-args)))
   (if (not (and linphone-process
                 (eq (process-status linphone-process) 'run)))
       (error "Cannot run Linphone backend program")
