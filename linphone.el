@@ -405,11 +405,11 @@ Navigate around and press buttons.
                  :tag "Quit"
                  :help-echo "Stop and exit telephone completely"
                  :notify (lambda (&rest ignore)
+                           (linphone-command linphone-quit-command)
+                           (setq linphone-process nil)
                            (condition-case nil
                                (kill-buffer-and-window)
-                             (error nil))
-                           (linphone-command linphone-quit-command)
-                           (setq linphone-process nil))
+                             (error nil)))
                  "Quit"))
 
 (defun linphone-standby-button ()
