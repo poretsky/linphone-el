@@ -70,6 +70,9 @@
 (eval-when-compile
   (require 'wid-edit))
 
+(autoload 'linphone-contacts-extract "linphone-contacts")
+(autoload 'linphone-contacts-show "linphone-contacts")
+
 (autoload 'linphone-log-acquire "linphone-log")
 (autoload 'linphone-log-show "linphone-log")
 
@@ -168,8 +171,13 @@ The string placeholder is to be replaced by the actual target address."
   :type 'string
   :group 'linphone-backend)
 
-(defcustom linphone-log-command "call-logs"
-  "Linphone call logs command string."
+(defcustom linphone-get-log-command "call-logs"
+  "Linphone command to get log info."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-get-contacts-command "friend list"
+  "Linphone command to get contact list."
   :type 'string
   :group 'linphone-backend)
 
@@ -282,6 +290,9 @@ if nil is specified, then the current level will be left untouched."
 (defvar linphone-log-requested nil
   "Indicates that calls log was requested.")
 
+(defvar linphone-contacts-requested nil
+  "Indicates that contact list was requested.")
+
 (defun linphone-command (command)
   "Send given string as a command to the Linphone backend."
   (if (and linphone-process
@@ -301,8 +312,13 @@ if nil is specified, then the current level will be left untouched."
 
 (defun linphone-refresh-log ()
   "Refresh log info."
-  (linphone-command linphone-log-command)
+  (linphone-command linphone-get-log-command)
   (setq linphone-log-requested t))
+
+(defun linphone-refresh-contacts ()
+  "Refresh contacts info."
+  (linphone-command linphone-get-contacts-command)
+  (setq linphone-contacts-requested t))
 
 ;;}}}
 ;;{{{ Major mode definition
@@ -322,14 +338,17 @@ Navigate around and press buttons.
 ;;}}}
 ;;{{{ Control widgets
 
+(defconst linphone-control-panel "*Linphone*"
+  "Name of the buffer for Linphone control widgets.")
+
 (defvar linphone-current-control nil
   "Current control panel popup function.")
 
-(defvar linphone-log-visible nil
-  "Linphone log visibility status.")
+(defvar linphone-log-visibility-control (cons nil 'linphone-refresh-log)
+  "Linphone log visibility control.")
 
-(defconst linphone-control-panel "*Linphone*"
-  "Name of the buffer for Linphone control widgets.")
+(defvar linphone-contacts-visibility-control (cons nil 'linphone-refresh-contacts)
+  "Linphone log visibility control.")
 
 (defvar linphone-backend-response nil
   "Save last significant backend response.")
@@ -422,17 +441,19 @@ Navigate around and press buttons.
                            (customize-group 'linphone))
                  "Customize"))
 
-(defun linphone-toggle-log-visibility-button ()
-  "Toggle log visibility button."
+(defun linphone-toggle-list-visibility-button (control label)
+  "Toggle list visibility button."
   (widget-create 'toggle
-                 :tag "calls history"
-                 :value linphone-log-visible
+                 :tag label
+                 :value (car control)
                  :on "Hide"
                  :off "Show"
                  :format "%[[%v %t]%]"
+                 :control control
                  :notify (lambda (widget &rest ignore)
-                           (if (setq linphone-log-visible (widget-value widget))
-                               (linphone-refresh-log)
+                           (if (setcar (widget-get widget ':control)
+                                       (widget-value widget))
+                               (funcall (cdr (widget-get widget ':control)))
                              (let ((position (point)))
                                (funcall linphone-current-control)
                                (goto-char position))))))
@@ -440,8 +461,13 @@ Navigate around and press buttons.
 (defun linphone-panel-bottom ()
   "Make up a panel bottom part."
   (widget-insert "\n")
-  (linphone-toggle-log-visibility-button)
-  (when linphone-log-visible
+  (linphone-toggle-list-visibility-button linphone-contacts-visibility-control "Address book")
+  (widget-insert "\n")
+  (when (car linphone-contacts-visibility-control)
+    (linphone-contacts-show)
+    (widget-insert "\n"))
+  (linphone-toggle-list-visibility-button linphone-log-visibility-control "Recent calls")
+  (when (car linphone-log-visibility-control)
     (widget-insert "\n")
     (linphone-log-show))
   (widget-insert "\n"))
@@ -557,8 +583,12 @@ Navigate around and press buttons.
           (cond
            ((null linphone-process)
             (kill-process) nil)
-           (linphone-log-requested
-            (linphone-log-acquire) t)
+           ((or linphone-contacts-requested linphone-log-requested)
+            (when linphone-contacts-requested
+              (linphone-contacts-extract))
+            (when linphone-log-requested
+              (linphone-log-acquire))
+            t)
            ((re-search-backward linphone-call-connection-pattern nil t)
             (linphone-unmute)
             (setq linphone-call-active t)
@@ -584,8 +614,10 @@ Navigate around and press buttons.
     (forward-line 0)
     (delete-region (point-min) (point))
     (set-marker (process-mark proc) (point-max)))
-  (let ((position (and linphone-log-requested (string-equal (buffer-name) linphone-control-panel) (point))))
-    (setq linphone-log-requested nil)
+  (let ((position (and (or linphone-contacts-requested linphone-log-requested)
+                       (string-equal (buffer-name) linphone-control-panel) (point))))
+    (setq linphone-contacts-requested nil
+          linphone-log-requested nil)
     (when (and linphone-current-control linphone-control-change)
       (funcall linphone-current-control)
       (when position
@@ -614,10 +646,11 @@ Navigate around and press buttons.
   (if (not (and linphone-process
                 (eq (process-status linphone-process) 'run)))
       (error "Cannot run Linphone backend program")
-    (setq linphone-backend-ready nil)
-    (setq linphone-online nil)
-    (setq linphone-call-active nil)
-    (setq linphone-log-requested nil)
+    (setq linphone-backend-ready nil
+          linphone-online nil
+          linphone-call-active nil
+          linphone-contacts-requested nil
+          linphone-log-requested nil)
     (set-process-filter linphone-process 'linphone-output-parser)
     (set-process-sentinel linphone-process 'linphone-sentinel)))
 
