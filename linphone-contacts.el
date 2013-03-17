@@ -142,6 +142,9 @@ and store it in the internal list."
 ;;}}}
 ;;{{{ Control widgets
 
+(defvar linphone-contacts-display-position nil
+  "Display position of the contact list to return after modification.")
+
 (defun linphone-contacts-call-button (item)
   "Button to call the item."
   (widget-create 'push-button
@@ -162,7 +165,9 @@ and store it in the internal list."
                             (read-string "Name: " (aref (widget-value button) 1))
                             (read-string "Address: " (aref (widget-value button) 2)))
                            (setq linphone-contacts-obsolete (aref (widget-value button) 0))
-                           (push 'linphone-contacts-delete-obsolete linphone-pending-actions))
+                           (push 'linphone-contacts-delete-obsolete linphone-pending-actions)
+                           (when linphone-contacts-display-position
+                             (goto-char linphone-contacts-display-position)))
                  item))
 
 (defun linphone-contacts-delete-button (item)
@@ -172,7 +177,9 @@ and store it in the internal list."
                  :help-echo (concat "Delete contact info for " (aref item 1))
                  :notify (lambda (button &rest ignore)
                            (linphone-contacts-delete (widget-value button))
-                           (setq linphone-pending-actions (list 'linphone-refresh-contacts)))
+                           (setq linphone-pending-actions (list 'linphone-refresh-contacts))
+                           (when linphone-contacts-display-position
+                             (goto-char linphone-contacts-display-position)))
                  (aref item 0)))
 
 (defun linphone-contacts-add-button ()
@@ -181,7 +188,9 @@ and store it in the internal list."
                  :tag "Add new"
                  :help-echo "Add a new contact"
                  :notify (lambda (&rest ignore)
-                           (call-interactively 'linphone-contacts-add))
+                           (call-interactively 'linphone-contacts-add)
+                           (when linphone-contacts-display-position
+                             (goto-char linphone-contacts-display-position)))
                  "Add new"))
 
 (defun linphone-contacts-clear-button ()
@@ -191,7 +200,9 @@ and store it in the internal list."
                  :help-echo "Clear all contacts info"
                  :notify (lambda (&rest ignore)
                            (linphone-command linphone-contacts-clear-command)
-                           (setq linphone-pending-actions (list 'linphone-refresh-contacts)))
+                           (setq linphone-pending-actions (list 'linphone-refresh-contacts))
+                           (when linphone-contacts-display-position
+                             (goto-char linphone-contacts-display-position)))
                  "Clear all"))
 
 ;;}}}
@@ -199,6 +210,7 @@ and store it in the internal list."
 
 (defun linphone-contacts-show ()
   "Make the address book view."
+  (setq linphone-contacts-display-position (point))
   (if linphone-contacts-list
       (mapc (lambda (item)
               (widget-insert (aref item 1) " ")
