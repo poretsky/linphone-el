@@ -612,7 +612,7 @@ Each action should be represented by function without arguments.")
     (widget-insert "\n")
     (linphone-panel-bottom)
     (widget-setup)
-    (widget-backward 1))
+    (widget-forward 2))
   (pop-to-buffer linphone-control-panel))
 
 (defun linphone-notification-close-button ()
