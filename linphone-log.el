@@ -42,6 +42,8 @@
 
 (require 'linphone)
 
+(autoload 'linphone-contacts-add "linphone-contacts")
+
 ;;}}}
 ;;{{{ Customizations
 
@@ -226,13 +228,26 @@ The string placeholder is to be replaced by a call type detector string."
 (defun linphone-log-call-button (item)
   "Button to call the item."
   (widget-create 'push-button
-                 :tag "Call now"
+                 :tag "Call"
                  :help-echo (concat "Call "
                                     (or (aref item 2) (aref item 3))
                                     " just now")
                  :notify (lambda (button &rest ignore)
                            (linphone-call (widget-value button)))
                  (aref item 3)))
+
+(defun linphone-log-remember-button (item)
+  "Button to remember the item as a contact."
+  (widget-create 'push-button
+                 :tag "Remember"
+                 :help-echo (concat "Remember "
+                                    (or (aref item 2) (aref item 3))
+                                    " as a contact")
+                 :notify (lambda (button &rest ignore)
+                           (linphone-contacts-add
+                            (read-string "Name: " (aref (widget-value button) 2))
+                            (aref (widget-value button) 3)))
+                 item))
 
 ;;}}}
 ;;{{{ Calls classification predicates
@@ -285,9 +300,12 @@ The string placeholder is to be replaced by a call type detector string."
                 (when (aref item 2)
                   (widget-insert (aref item 2) " "))
                 (widget-insert "<" (aref item 3) ">")
-                (unless linphone-call-active
+                (when (and (aref item 3) (string-match-p "\\w" (aref item 3)))
+                  (unless linphone-call-active
+                    (widget-insert " ")
+                    (linphone-log-call-button item))
                   (widget-insert " ")
-                  (linphone-log-call-button item))
+                  (linphone-log-remember-button item))
                 (widget-insert "\n" (aref item 5))
                 (when (aref item 4)
                   (widget-insert " after " (aref item 4)))
@@ -298,7 +316,7 @@ The string placeholder is to be replaced by a call type detector string."
 (defun linphone-log-show ()
   "Insert call history into the current buffer."
   (if (null linphone-log-call-list)
-      (widget-insert "\nThe log is empty")
+      (widget-insert "The log is empty")
     (linphone-log-show-list linphone-log-missed-calls "Missed" 'linphone-log-missed-p)
     (linphone-log-show-list linphone-log-received-calls "Received" 'linphone-log-received-p)
     (linphone-log-show-list linphone-log-dialed-calls "Dialed" 'linphone-log-dialed-p)
