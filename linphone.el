@@ -206,6 +206,8 @@ The string placeholder is to be replaced by the actual target address."
 \\|Not Acceptable Here\
 \\|Forbidden\
 \\|Could not reach destination\
+\\|Could not resolve this number\
+\\|Call failed\
 \\|Terminate current call first\
 \\|Request Timeout\
 \\|Call declined\
