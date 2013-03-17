@@ -163,6 +163,16 @@ proxy host name and your password."
   :type 'string
   :group 'linphone-backend)
 
+(defcustom linphone-unregister-command "unregister"
+  "Command to cancel registration."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-check-registration-command "status register"
+  "Command to check registration status."
+  :type 'string
+  :group 'linphone-backend)
+
 (defcustom linphone-call-command-format "call %s"
   "Linphone call command format.
 The string placeholder is to be replaced by the actual target address."
@@ -250,6 +260,11 @@ The string placeholder is to be replaced by the actual target address."
 messages. The string placeholder is to be replaced by the status
 matching regexp constructed from the online and offline patterns."
   :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-unreg-state-pattern "registered=-?[0-9]+"
+  "Regexp matching no registration status message."
+  :type 'regexp
   :group 'linphone-backend)
 
 (defcustom linphone-mic-gain nil
@@ -347,6 +362,10 @@ Return fully qualified address string."
   (linphone-command linphone-get-contacts-command)
   (setq linphone-contacts-requested t))
 
+(defun linphone-check-registration-status ()
+  "Check registration status."
+  (linphone-command linphone-check-registration-command))
+
 ;;}}}
 ;;{{{ Major mode definition
 
@@ -388,6 +407,10 @@ Navigate around and press buttons.
 
 (defvar linphone-online nil
   "Indicates Linphone online state.")
+
+(defvar linphone-pending-actions nil
+  "A queue of pending actions to be done to accomplish the task in progress.
+Each action should be represented by function without arguments.")
 
 (defun linphone-arrange-control-panel (header)
   "Arrange fresh control panel with specified header."
@@ -488,6 +511,16 @@ Navigate around and press buttons.
                                     (read-passwd "Password: "))))
                  "Register"))
 
+(defun linphone-unregister-button ()
+  "Button to cancel registration."
+  (widget-create 'push-button
+                 :tag "Unregister"
+                 :help-echo "Cancel or change subscription"
+                 :notify (lambda (&rest ignore)
+                           (linphone-command linphone-unregister-command)
+                           (setq linphone-pending-actions (list 'linphone-check-registration-status)))
+                 "Unregister"))
+
 (defun linphone-toggle-list-visibility-button (control label)
   "Toggle list visibility button."
   (widget-create 'toggle
@@ -536,6 +569,9 @@ Navigate around and press buttons.
       (linphone-customize-button))
     (widget-insert "\n")
     (when linphone-online
+      (widget-insert "\n    ")
+      (linphone-unregister-button)
+      (widget-insert "\n")
       (linphone-panel-bottom))
     (widget-setup)
     (widget-forward 1))
@@ -606,10 +642,6 @@ Navigate around and press buttons.
 (defvar linphone-control-change nil
   "Indicates that current control panel is changed and should be updated.")
 
-(defvar linphone-pending-actions nil
-  "A queue of pending actions to be done to accomplish the task in progress.
-Each action should be represented by function without arguments.")
-
 (defun linphone-output-parser (proc string)
   "Filter function to parse Linphone backend output."
   (with-current-buffer (process-buffer proc)
@@ -644,6 +676,10 @@ Each action should be represented by function without arguments.")
                 (when linphone-log-requested
                   (linphone-log-acquire))
                 t)
+               ((re-search-backward linphone-unreg-state-pattern nil t)
+                (when linphone-online
+                  (linphone-play-sound linphone-offline-sound)
+                  (setq linphone-online nil) t))
                ((re-search-backward linphone-call-connection-pattern nil t)
                 (linphone-unmute)
                 (setq linphone-call-active t)
