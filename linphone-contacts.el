@@ -45,13 +45,27 @@
 ;;}}}
 ;;{{{ Customizations
 
-(defgroup linphone-contacts nil
-  "Log viewing customization."
-  :group 'linphone)
-
 (defcustom linphone-contacts-call-command-format "friend call %d"
   "Format string to construct a contact call command.
 The number placeholder is to be replaced by the contact index."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-contacts-add-command-format "friend add \"%s\" %s"
+  "Format string to construct a contact add command.
+String placeholders are to be replaced by the name and address
+of a new contact."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-contacts-delete-command-format "friend delete %d"
+  "Format string to construct a contact delete command.
+The number placeholder is to be replaced by the contact index."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-contacts-clear-command "friend delete all"
+  "Command string to clear all contacts info."
   :type 'string
   :group 'linphone-backend)
 
@@ -100,6 +114,32 @@ and store it in the internal list."
                   (string-lessp (aref first 1) (aref second 1)))))))
 
 ;;}}}
+;;{{{ Utility functions
+
+(defvar linphone-contacts-obsolete nil
+  "An obsolete contact index to delete.")
+
+(defun linphone-contacts-delete (index)
+  "Delete contact by index."
+  (linphone-command (format linphone-contacts-delete-command-format index)))
+
+(defun linphone-contacts-delete-obsolete ()
+  "Delete obsolete contact if any."
+  (when linphone-contacts-obsolete
+    (linphone-contacts-delete linphone-contacts-obsolete)
+    (setq linphone-contacts-obsolete nil)))
+
+(defun linphone-contacts-add (name address)
+  "Add a new contact."
+  (interactive "sName: \nsAddress: ")
+  (unless (and name (string-match-p "\\w" name))
+    (error "Invalid contact name"))
+  (unless (and address (string-match-p "\\w" address))
+    (error "Invalid contact address"))
+  (linphone-command (format linphone-contacts-add-command-format name address))
+  (setq linphone-pending-actions (list 'linphone-refresh-contacts)))
+
+;;}}}
 ;;{{{ Control widgets
 
 (defun linphone-contacts-call-button (item)
@@ -109,8 +149,50 @@ and store it in the internal list."
                  :help-echo (concat "Make a call to " (aref item 1))
                  :notify (lambda (button &rest ignore)
                            (linphone-command (format linphone-contacts-call-command-format
-                                                     (widget-value button)))
-                 (aref item 0))))
+                                                     (widget-value button))))
+                 (aref item 0)))
+
+(defun linphone-contacts-edit-button (item)
+  "Button to edit the item."
+  (widget-create 'push-button
+                 :tag "Edit"
+                 :help-echo (concat "Edit contact info for " (aref item 1))
+                 :notify (lambda (button &rest ignore)
+                           (linphone-contacts-add
+                            (read-string "Name: " (aref (widget-value button) 1))
+                            (read-string "Address: " (aref (widget-value button) 2)))
+                           (setq linphone-contacts-obsolete (aref (widget-value button) 0))
+                           (push 'linphone-contacts-delete-obsolete linphone-pending-actions))
+                 item))
+
+(defun linphone-contacts-delete-button (item)
+  "Button to delete the item."
+  (widget-create 'push-button
+                 :tag "Delete"
+                 :help-echo (concat "Delete contact info for " (aref item 1))
+                 :notify (lambda (button &rest ignore)
+                           (linphone-contacts-delete (widget-value button))
+                           (setq linphone-pending-actions (list 'linphone-refresh-contacts)))
+                 (aref item 0)))
+
+(defun linphone-contacts-add-button ()
+  "Button to add a new contact."
+  (widget-create 'push-button
+                 :tag "Add new"
+                 :help-echo "Add a new contact"
+                 :notify (lambda (&rest ignore)
+                           (call-interactively 'linphone-contacts-add))
+                 "Add new"))
+
+(defun linphone-contacts-clear-button ()
+  "Button to clear all contacts info."
+  (widget-create 'push-button
+                 :tag "Clear all"
+                 :help-echo "Clear all contacts info"
+                 :notify (lambda (&rest ignore)
+                           (linphone-command linphone-contacts-clear-command)
+                           (setq linphone-pending-actions (list 'linphone-refresh-contacts)))
+                 "Clear all"))
 
 ;;}}}
 ;;{{{ Show contact list
@@ -126,9 +208,17 @@ and store it in the internal list."
               (unless linphone-call-active
                 (widget-insert " ")
                 (linphone-contacts-call-button item))
+              (widget-insert " ")
+              (linphone-contacts-edit-button item)
+              (widget-insert " ")
+              (linphone-contacts-delete-button item)
               (widget-insert "\n"))
             linphone-contacts-list)
-    (widget-insert "Empty list\n")))
+    (widget-insert "Empty list\n"))
+  (linphone-contacts-add-button)
+  (widget-insert "  ")
+  (linphone-contacts-clear-button)
+  (widget-insert "\n"))
 
 ;;}}}
 
