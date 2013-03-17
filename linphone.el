@@ -554,7 +554,12 @@ Navigate around and press buttons.
 (defvar linphone-online nil
   "Indicates Linphone online state.")
 
-(defvar linphone-control-change nil)
+(defvar linphone-control-change nil
+  "Indicates that current control panel is changed and should be updated.")
+
+(defvar linphone-pending-actions nil
+  "A queue of pending actions to be done to accomplish the task in progress.
+Each action should be represented by function without arguments.")
 
 (defun linphone-output-parser (proc string)
   "Filter function to parse Linphone backend output."
@@ -614,14 +619,18 @@ Navigate around and press buttons.
     (forward-line 0)
     (delete-region (point-min) (point))
     (set-marker (process-mark proc) (point-max)))
-  (let ((position (and (or linphone-contacts-requested linphone-log-requested)
-                       (string-equal (buffer-name) linphone-control-panel) (point))))
-    (setq linphone-contacts-requested nil
-          linphone-log-requested nil)
-    (when (and linphone-current-control linphone-control-change)
-      (funcall linphone-current-control)
-      (when position
-        (goto-char position)))))
+  (if (and linphone-backend-ready linphone-pending-actions)
+      (let ((action (car linphone-pending-actions)))
+        (setq linphone-pending-actions (cdr linphone-pending-actions))
+        (funcall action))
+    (let ((position (and (or linphone-contacts-requested linphone-log-requested)
+                         (string-equal (buffer-name) linphone-control-panel) (point))))
+      (setq linphone-contacts-requested nil
+            linphone-log-requested nil)
+      (when (and linphone-current-control linphone-control-change)
+        (funcall linphone-current-control)
+        (when position
+          (goto-char position))))))
 
 ;;}}}
 ;;{{{ Backend process control
@@ -649,6 +658,7 @@ Navigate around and press buttons.
     (setq linphone-backend-ready nil
           linphone-online nil
           linphone-call-active nil
+          linphone-pending-actions nil
           linphone-contacts-requested nil
           linphone-log-requested nil)
     (set-process-filter linphone-process 'linphone-output-parser)
