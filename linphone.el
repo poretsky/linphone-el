@@ -123,6 +123,12 @@ Don't touch this stuff unless you really know what you are doing."
   :type '(repeat string)
   :group 'linphone-backend)
 
+(defcustom linphone-backend-quit-command "linphonecsh exit"
+  "External command to quit backend.
+It can help when the native one doesn't do the work properly."
+  :type '(choice (const :tag "Not specified" nil) string)
+  :group 'linphone-backend)
+
 (defcustom linphone-mute-command "amixer set Capture,0 nocap"
   "Shell command that effectively mutes microphone."
   :type 'string
@@ -429,8 +435,10 @@ Navigate around and press buttons.
                  :tag "Quit"
                  :help-echo "Stop and exit telephone completely"
                  :notify (lambda (&rest ignore)
-                           (linphone-command linphone-quit-command)
-                           (setq linphone-process nil)
+                           (if linphone-backend-quit-command
+                               (call-process-shell-command linphone-backend-quit-command)
+                             (linphone-command linphone-quit-command))
+                           (set-process-filter linphone-process t)
                            (condition-case nil
                                (kill-buffer-and-window)
                              (error nil)))
@@ -630,8 +638,6 @@ Each action should be represented by function without arguments.")
     (goto-char (point-max))
     (setq linphone-control-change
           (or (cond
-               ((null linphone-process)
-                (kill-process) nil)
                ((or linphone-contacts-requested linphone-log-requested)
                 (when linphone-contacts-requested
                   (linphone-contacts-extract))
