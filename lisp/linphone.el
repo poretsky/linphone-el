@@ -70,16 +70,23 @@
 (eval-when-compile
   (require 'wid-edit))
 
+(autoload 'linphone-online-controls "linphone-control")
+(autoload 'linphone-incoming-call-control "linphone-control")
+(autoload 'linphone-outgoing-call-control "linphone-control")
+(autoload 'linphone-notification "linphone-control")
+(autoload 'linphone-active-call-control "linphone-conversation")
+(autoload 'linphone-mute "linphone-conversation")
+(autoload 'linphone-unmute "linphone-conversation")
 (autoload 'linphone-contacts-extract "linphone-contacts")
 (autoload 'linphone-contacts-show "linphone-contacts")
-
 (autoload 'linphone-log-acquire "linphone-log")
 (autoload 'linphone-log-show "linphone-log")
 
 ;;}}}
 ;;{{{ Customizations
 
-(defvar linphone-sounds-directory (file-name-directory load-file-name)
+(defvar linphone-sounds-directory
+  (file-name-as-directory (expand-file-name "../sounds" (file-name-directory load-file-name)))
   "Directory where sound icons are stored.")
 
 (defgroup linphone nil
@@ -129,23 +136,6 @@ It can help when the native one doesn't do the work properly."
   :type '(choice (const :tag "Not specified" nil) string)
   :group 'linphone-backend)
 
-(defcustom linphone-mute-command "amixer set Capture,0 nocap"
-  "Shell command that effectively mutes microphone."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-unmute-command "amixer set Capture,0 cap"
-  "Shell command that effectively unmutes microphone."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-mic-tune-command "amixer set Capture,0 %d%%"
-  "Format of the shell command to control microphone gain.
-This format specification must have one placeholder for numeric
-parameter to be replaced by actual gain value."
-  :type 'string
-  :group 'linphone-backend)
-
 (defcustom linphone-sound-play-program "aplay"
   "Program used to play audio icons."
   :type 'string
@@ -163,34 +153,8 @@ proxy host name and your password."
   :type 'string
   :group 'linphone-backend)
 
-(defcustom linphone-unregister-command "unregister"
-  "Command to cancel registration."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-check-registration-command "status register"
-  "Command to check registration status."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-call-command-format "call %s"
-  "Linphone call command format.
-The string placeholder is to be replaced by the actual target address."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-answer-command "answer"
-  "Linphone answer incoming call command string."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-cancel-command "terminate"
-  "Linphone current call cancellation command string."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-quit-command "quit"
-  "Linphone quit command string."
+(defcustom linphone-get-contacts-command "friend list"
+  "Linphone command to get contact list."
   :type 'string
   :group 'linphone-backend)
 
@@ -199,8 +163,8 @@ The string placeholder is to be replaced by the actual target address."
   :type 'string
   :group 'linphone-backend)
 
-(defcustom linphone-get-contacts-command "friend list"
-  "Linphone command to get contact list."
+(defcustom linphone-quit-command "quit"
+  "Linphone quit command string."
   :type 'string
   :group 'linphone-backend)
 
@@ -255,7 +219,7 @@ The string placeholder is to be replaced by the actual target address."
   :type 'regexp
   :group 'linphone-backend)
 
-(defcustom linphone-registration-result-pattern "Registration on .* \\(%s\\)"
+(defcustom linphone-registration-result-pattern "Registration on \\(.*\\) \\(%s\\)"
   "Regular expression pattern that matches against registration result
 messages. The string placeholder is to be replaced by the status
 matching regexp constructed from the online and offline patterns."
@@ -267,27 +231,8 @@ matching regexp constructed from the online and offline patterns."
   :type 'regexp
   :group 'linphone-backend)
 
-(defcustom linphone-mic-gain nil
-  "Microphone gain level in percents.
-The value must be in the range 0 through 100 inclusively.
-if nil is specified, then the current level will be left untouched."
-  :type '(choice (const :tag "Untouched" nil)
-                 (integer :tag "Explicit value in percents"))
-  :initialize 'custom-initialize-default
-  :set (lambda (symbol value)
-         (when value
-           (when (or (< value 0) (> value 100))
-             (error "Linphone microphone gain value is out of range"))
-           (call-process-shell-command (format linphone-mic-tune-command value)))
-         (custom-set-default symbol value))
-  :set-after '(linphone-mic-tune-command)
-  :group 'linphone)
-
 ;;}}}
 ;;{{{ Utilities
-
-(defvar linphone-mic-muted nil
-  "Indicates that the microphone is muted.")
 
 (defun linphone-play-sound (icon)
   "Play a sound icon."
@@ -295,18 +240,6 @@ if nil is specified, then the current level will be left untouched."
     (apply 'call-process linphone-sound-play-program
            nil 0 nil
            (append linphone-sound-play-args (list icon)))))
-
-(defun linphone-mute ()
-  "Mute microphone."
-  (setq linphone-mic-muted t)
-  (call-process-shell-command linphone-mute-command))
-
-(defun linphone-unmute ()
-  "Unmute microphone."
-  (setq linphone-mic-muted nil)
-  (when (numberp linphone-mic-gain)
-    (call-process-shell-command (format linphone-mic-tune-command linphone-mic-gain)))
-  (call-process-shell-command linphone-unmute-command))
 
 (defun linphone-validate-sip-address (address &optional host-only)
   "Check and validate supplied sip address.
@@ -346,12 +279,6 @@ Return fully qualified address string."
                              (format "%s\n" command)))
     (error "No running Linphone backend")))
 
-(defun linphone-call (addr)
-  "Arrange an outgoing call to specified address."
-  (interactive "sAddress to call: ")
-  (linphone-command
-   (format linphone-call-command-format addr)))
-
 (defun linphone-refresh-log ()
   "Refresh log info."
   (linphone-command linphone-get-log-command)
@@ -361,10 +288,6 @@ Return fully qualified address string."
   "Refresh contacts info."
   (linphone-command linphone-get-contacts-command)
   (setq linphone-contacts-requested t))
-
-(defun linphone-check-registration-status ()
-  "Check registration status."
-  (linphone-command linphone-check-registration-command))
 
 ;;}}}
 ;;{{{ Major mode definition
@@ -390,12 +313,6 @@ Navigate around and press buttons.
 (defvar linphone-current-control nil
   "Current control panel popup function.")
 
-(defvar linphone-log-visibility-control (cons nil 'linphone-refresh-log)
-  "Linphone log visibility control.")
-
-(defvar linphone-contacts-visibility-control (cons nil 'linphone-refresh-contacts)
-  "Linphone log visibility control.")
-
 (defvar linphone-backend-response nil
   "Save last significant backend response.")
 
@@ -406,95 +323,18 @@ Navigate around and press buttons.
   "Indicates active call state.")
 
 (defvar linphone-online nil
-  "Indicates Linphone online state.")
+  "Indicates Linphone online state.
+When online, this variable contains provider address.")
 
 (defvar linphone-pending-actions nil
   "A queue of pending actions to be done to accomplish the task in progress.
 Each action should be represented by function without arguments.")
 
-(defun linphone-arrange-control-panel (header)
-  "Arrange fresh control panel with specified header."
-  (with-current-buffer (get-buffer-create linphone-control-panel)
-    (kill-all-local-variables)
-    (let ((inhibit-readonly t))
-      (erase-buffer))
-    (when (fboundp 'remove-overlays)
-      (remove-overlays))
-    (linphone-control-mode)
-    (widget-insert header "\n\n")))
+(defvar linphone-log-visibility-control (cons nil 'linphone-refresh-log)
+  "Linphone log visibility control.")
 
-(defun linphone-mute-button ()
-  "Mute/unmute button."
-  (widget-create 'toggle
-                 :tag "Microphone"
-                 :value (not linphone-mic-muted)
-                 :on "Mute"
-                 :off "Unmute"
-                 :format "%t: %[[%v]%]"
-                 :notify (lambda (widget &rest ignore)
-                           (if (widget-value widget)
-                               (linphone-unmute)
-                             (linphone-mute)))))
-
-(defun linphone-answer-button ()
-  "Answer incoming call button."
-  (widget-create 'push-button
-                 :tag "Accept"
-                 :notify (lambda (&rest ignore)
-                           (linphone-command linphone-answer-command))
-                 "Accept"))
-
-(defun linphone-cancel-button (label)
-  "Current call cancellation button."
-  (widget-create 'push-button
-                 :tag label
-                 :notify (lambda (&rest ignore)
-                           (linphone-command linphone-cancel-command))
-                 label))
-
-(defun linphone-quit-button ()
-  "Linphone quit button."
-  (widget-create 'push-button
-                 :tag "Quit"
-                 :help-echo "Stop and exit telephone completely"
-                 :notify (lambda (&rest ignore)
-                           (if linphone-backend-quit-command
-                               (call-process-shell-command linphone-backend-quit-command)
-                             (linphone-command linphone-quit-command))
-                           (set-process-filter linphone-process t)
-                           (condition-case nil
-                               (kill-buffer-and-window)
-                             (error nil)))
-                 "Quit"))
-
-(defun linphone-standby-button ()
-  "Linphone standby mode button."
-  (widget-create 'push-button
-                 :tag "Standby"
-                 :help-echo "Run in background waiting for incoming calls"
-                 :notify (lambda (&rest ignore)
-                           (condition-case nil
-                               (kill-buffer-and-window)
-                             (error nil)))
-                 "Standby"))
-
-(defun linphone-arrange-call-button ()
-  "Button to make a call."
-  (widget-create 'push-button
-                 :tag "Call"
-                 :help-echo "Arrange an outgoing call"
-                 :notify (lambda (&rest ignore)
-                           (call-interactively 'linphone-call))
-                 "Call"))
-
-(defun linphone-customize-button ()
-  "Button to enter customization mode."
-  (widget-create 'push-button
-                 :tag "Customize"
-                 :help-echo "Set up some options"
-                 :notify (lambda (&rest ignore)
-                           (customize-group 'linphone))
-                 "Customize"))
+(defvar linphone-contacts-visibility-control (cons nil 'linphone-refresh-contacts)
+  "Linphone log visibility control.")
 
 (defun linphone-register-button ()
   "Button to register or change account."
@@ -511,15 +351,29 @@ Each action should be represented by function without arguments.")
                                     (read-passwd "Password: "))))
                  "Register"))
 
-(defun linphone-unregister-button ()
-  "Button to cancel registration."
+(defun linphone-customize-button ()
+  "Button to enter customization mode."
   (widget-create 'push-button
-                 :tag "Unregister"
-                 :help-echo "Cancel or change subscription"
+                 :tag "Customize"
+                 :help-echo "Set up some options"
                  :notify (lambda (&rest ignore)
-                           (linphone-command linphone-unregister-command)
-                           (setq linphone-pending-actions (list 'linphone-check-registration-status)))
-                 "Unregister"))
+                           (customize-group 'linphone))
+                 "Customize"))
+
+(defun linphone-quit-button ()
+  "Linphone quit button."
+  (widget-create 'push-button
+                 :tag "Quit"
+                 :help-echo "Stop and exit telephone completely"
+                 :notify (lambda (&rest ignore)
+                           (if linphone-backend-quit-command
+                               (call-process-shell-command linphone-backend-quit-command)
+                             (linphone-command linphone-quit-command))
+                           (set-process-filter linphone-process t)
+                           (condition-case nil
+                               (kill-buffer-and-window)
+                             (error nil)))
+                 "Quit"))
 
 (defun linphone-toggle-list-visibility-button (control label)
   "Toggle list visibility button."
@@ -538,8 +392,19 @@ Each action should be represented by function without arguments.")
                                (funcall linphone-current-control)
                                (goto-char position))))))
 
-(defun linphone-panel-bottom ()
-  "Make up a panel bottom part."
+(defun linphone-arrange-control-panel (header)
+  "Arrange fresh control panel with specified header."
+  (with-current-buffer (get-buffer-create linphone-control-panel)
+    (kill-all-local-variables)
+    (let ((inhibit-readonly t))
+      (erase-buffer))
+    (when (fboundp 'remove-overlays)
+      (remove-overlays))
+    (linphone-control-mode)
+    (widget-insert header "\n\n")))
+
+(defun linphone-panel-footer ()
+  "Make up a panel footer part."
   (widget-insert "\n")
   (linphone-toggle-list-visibility-button linphone-contacts-visibility-control "Address book")
   (widget-insert "\n")
@@ -554,84 +419,21 @@ Each action should be represented by function without arguments.")
 
 (defun linphone-general-control ()
   "General control panel popup."
-  (linphone-arrange-control-panel "Internet telephone")
+  (linphone-arrange-control-panel
+   (format "Internet telephone %s"
+           (if linphone-online
+               (format "at %s" linphone-online)
+             "offline")))
   (with-current-buffer linphone-control-panel
     (if linphone-online
-        (linphone-arrange-call-button)
-      (linphone-register-button))
-    (widget-insert "    ")
-    (when linphone-online
-      (linphone-standby-button)
-      (widget-insert "\n"))
-    (linphone-quit-button)
-    (when linphone-online
+        (linphone-online-controls)
+      (linphone-register-button)
+      (widget-insert "    ")
+      (linphone-quit-button)
       (widget-insert "    ")
       (linphone-customize-button))
     (widget-insert "\n")
-    (when linphone-online
-      (widget-insert "\n    ")
-      (linphone-unregister-button)
-      (widget-insert "\n")
-      (linphone-panel-bottom))
-    (widget-setup)
-    (widget-forward 1))
-  (pop-to-buffer linphone-control-panel))
-
-(defun linphone-incoming-call-control ()
-  "Incoming call control panel popup."
-  (linphone-arrange-control-panel linphone-backend-response)
-  (with-current-buffer linphone-control-panel
-    (linphone-answer-button)
-    (widget-insert "    ")
-    (linphone-cancel-button "Cancel")
-    (widget-insert "\n")
-    (widget-setup)
-    (widget-forward 1))
-  (display-buffer linphone-control-panel))
-
-(defun linphone-outgoing-call-control ()
-  "Outgoing call control panel popup."
-  (linphone-arrange-control-panel linphone-backend-response)
-  (with-current-buffer linphone-control-panel
-    (widget-insert "        ")
-    (linphone-cancel-button "Cancel")
-    (widget-insert "\n")
-    (widget-setup)
-    (widget-forward 1))
-  (pop-to-buffer linphone-control-panel))
-
-(defun linphone-active-call-control ()
-  "Active call control panel popup."
-  (linphone-arrange-control-panel (format "Talking with %s"
-                                          linphone-current-call))
-  (with-current-buffer linphone-control-panel
-    (widget-insert "            ")
-    (linphone-cancel-button "Hang up")
-    (widget-insert "\n")
-    (linphone-mute-button)
-    (widget-insert "\n")
-    (linphone-panel-bottom)
-    (widget-setup)
-    (widget-forward 2))
-  (pop-to-buffer linphone-control-panel))
-
-(defun linphone-notification-close-button ()
-  "Button to close notification window."
-  (widget-create 'push-button
-                 :tag "Ok"
-                 :notify (lambda (&rest ignore)
-                           (if linphone-call-active
-                               (setq linphone-current-control 'linphone-active-call-control)
-                             (setq linphone-current-control 'linphone-general-control))
-                           (funcall linphone-current-control))
-                 "Ok"))
-
-(defun linphone-notification ()
-  "Notification window popup."
-  (linphone-arrange-control-panel linphone-backend-response)
-  (with-current-buffer linphone-control-panel
-    (linphone-notification-close-button)
-    (widget-insert "\n")
+    (linphone-panel-footer)
     (widget-setup)
     (widget-forward 1))
   (pop-to-buffer linphone-control-panel))
@@ -656,9 +458,9 @@ Each action should be represented by function without arguments.")
                                       (concat linphone-online-state-string
                                               "\\|" linphone-offline-state-pattern))
                               nil t)
-      (if (string-equal (match-string 1) linphone-online-state-string)
+      (if (string-equal (match-string 2) linphone-online-state-string)
           (unless linphone-online
-            (setq linphone-online t
+            (setq linphone-online (match-string 1)
                   linphone-control-change t)
             (linphone-play-sound linphone-online-sound)
             (message "%s" (match-string 0)))

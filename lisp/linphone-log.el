@@ -29,6 +29,8 @@
 ;;; Commentary:
 
 ;;; This module provides Linphone call log viewing facilities.
+;;; It will be automatically loaded by the main Linphone interface
+;;; when necessary, so the file should be available on the load path.
 
 ;;; Code:
 
@@ -42,6 +44,7 @@
 
 (require 'linphone)
 
+(autoload 'linphone-call "linphone-control")
 (autoload 'linphone-contacts-add "linphone-contacts")
 
 ;;}}}
@@ -301,7 +304,7 @@ The string placeholder is to be replaced by a call type detector string."
                   (widget-insert (aref item 2) " "))
                 (widget-insert "<" (aref item 3) ">")
                 (when (and (aref item 3) (string-match-p "\\w" (aref item 3)))
-                  (unless linphone-call-active
+                  (when (and linphone-online (not linphone-call-active))
                     (widget-insert " ")
                     (linphone-log-call-button item))
                   (widget-insert " ")

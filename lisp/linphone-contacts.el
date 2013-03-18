@@ -29,6 +29,8 @@
 ;;; Commentary:
 
 ;;; This module provides Linphone address book management facilities.
+;;; It will be automatically loaded by the main Linphone interface
+;;; when necessary, so the file should be available on the load path.
 
 ;;; Code:
 
@@ -217,7 +219,7 @@ and store it in the internal list."
               (when (aref item 3)
                 (widget-insert "(" (aref item 3) ") "))
               (widget-insert "<" (aref item 2) ">")
-              (unless linphone-call-active
+              (when (and linphone-online (not linphone-call-active))
                 (widget-insert " ")
                 (linphone-contacts-call-button item))
               (widget-insert " ")
@@ -237,4 +239,4 @@ and store it in the internal list."
 
 (provide 'linphone-contacts)
 
-;;; linphone-log.el ends here
+;;; linphone-contacts.el ends here
