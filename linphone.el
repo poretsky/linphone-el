@@ -670,12 +670,12 @@ Each action should be represented by function without arguments.")
     (goto-char (point-max))
     (setq linphone-control-change
           (or (cond
-               ((or linphone-contacts-requested linphone-log-requested)
-                (when linphone-contacts-requested
-                  (linphone-contacts-extract))
-                (when linphone-log-requested
-                  (linphone-log-acquire))
-                t)
+               (linphone-contacts-requested
+                (when linphone-backend-ready
+                  (linphone-contacts-extract) t))
+               (linphone-log-requested
+                (when linphone-backend-ready
+                  (linphone-log-acquire) t))
                ((re-search-backward linphone-unreg-state-pattern nil t)
                 (when linphone-online
                   (linphone-play-sound linphone-offline-sound)
@@ -700,11 +700,14 @@ Each action should be represented by function without arguments.")
                ((re-search-backward linphone-call-failure-pattern nil t)
                 (setq linphone-backend-response (match-string 0))
                 (linphone-play-sound linphone-hangup-sound)
-                (setq linphone-current-control 'linphone-notification)))
+                (setq linphone-current-control 'linphone-notification))
+               (t nil))
               linphone-control-change))
-    (goto-char (point-max))
-    (forward-line 0)
-    (delete-region (point-min) (point))
+    (when (or linphone-backend-ready
+              (not (or linphone-contacts-requested linphone-log-requested)))
+      (goto-char (point-max))
+      (forward-line 0)
+      (delete-region (point-min) (point)))
     (set-marker (process-mark proc) (point-max)))
   (if (and linphone-backend-ready linphone-pending-actions)
       (let ((action (car linphone-pending-actions)))
@@ -712,8 +715,9 @@ Each action should be represented by function without arguments.")
         (funcall action))
     (let ((position (and (or linphone-contacts-requested linphone-log-requested)
                          (string-equal (buffer-name) linphone-control-panel) (point))))
-      (setq linphone-contacts-requested nil
-            linphone-log-requested nil)
+      (when linphone-backend-ready
+        (setq linphone-contacts-requested nil
+              linphone-log-requested nil))
       (when (and linphone-current-control linphone-control-change)
         (funcall linphone-current-control)
         (when position
