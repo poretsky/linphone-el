@@ -324,7 +324,7 @@ Navigate around and press buttons.
 
 (defvar linphone-online nil
   "Indicates Linphone online state.
-When online, this variable contains provider address.")
+When online, this variable usually contains provider address.")
 
 (defvar linphone-pending-actions nil
   "A queue of pending actions to be done to accomplish the task in progress.
@@ -342,13 +342,16 @@ Each action should be represented by function without arguments.")
                  :tag "Register"
                  :help-echo "Register now"
                  :notify (lambda (&rest ignore)
-                           (linphone-command
-                            (format linphone-register-command-format
-                                    (linphone-validate-sip-address
-                                     (read-string "Your SIP address: "))
-                                    (linphone-validate-sip-address
-                                     (read-string "SIP proxy host name: ") t)
-                                    (read-passwd "Password: "))))
+                           (let ((identity
+                                  (linphone-validate-sip-address
+                                   (read-string "Your identity: "))))
+                             (linphone-command
+                              (format linphone-register-command-format identity
+                                      (linphone-validate-sip-address
+                                       (read-string "SIP proxy: "
+                                                    (and (string-match "@\\(.+\\)$" identity)
+                                                         (match-string 1 identity))) t)
+                                      (read-passwd "Password: ")))))
                  "Register"))
 
 (defun linphone-customize-button ()
@@ -422,7 +425,9 @@ Each action should be represented by function without arguments.")
   (linphone-arrange-control-panel
    (format "Internet telephone %s"
            (if linphone-online
-               (format "at %s" linphone-online)
+               (if (stringp linphone-online)
+                   (format "at %s" linphone-online)
+                 "online")
              "offline")))
   (with-current-buffer linphone-control-panel
     (if linphone-online
@@ -459,7 +464,8 @@ Each action should be represented by function without arguments.")
                                               "\\|" linphone-offline-state-pattern))
                               nil t)
       (if (string-equal (match-string 2) linphone-online-state-string)
-          (unless linphone-online
+          (unless (and (stringp linphone-online)
+                       (string-equal (match-string 1) linphone-online))
             (setq linphone-online (match-string 1)
                   linphone-control-change t)
             (linphone-play-sound linphone-online-sound)
