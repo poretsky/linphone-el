@@ -228,8 +228,9 @@ and store it in the internal list."
             linphone-contacts-list)
     (widget-insert "Empty list\n"))
   (linphone-contacts-add-button)
-  (widget-insert "  ")
-  (linphone-contacts-clear-button)
+  (when linphone-contacts-list
+    (widget-insert "  ")
+    (linphone-contacts-clear-button))
   (widget-insert "\n"))
 
 ;;}}}
