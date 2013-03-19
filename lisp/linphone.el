@@ -471,6 +471,11 @@ Each action should be represented by function without arguments.")
             (linphone-play-sound linphone-online-sound)
             (message "%s" (match-string 0)))
         (when linphone-online
+          (when linphone-call-active
+            (linphone-mute)
+            (linphone-play-sound linphone-hangup-sound))
+          (unless (eq linphone-current-control 'linphone-notification)
+            (setq linphone-current-control 'linphone-general-control))
           (setq linphone-online nil
                 linphone-control-change t)
           (linphone-play-sound linphone-offline-sound)
@@ -488,27 +493,35 @@ Each action should be represented by function without arguments.")
                 (when linphone-online
                   (linphone-play-sound linphone-offline-sound)
                   (setq linphone-online nil) t))
-               ((re-search-backward linphone-call-connection-pattern nil t)
+               ((and linphone-online
+                     (re-search-backward linphone-call-connection-pattern nil t))
                 (linphone-unmute)
-                (setq linphone-call-active t)
-                (setq linphone-current-control 'linphone-active-call-control))
-               ((re-search-backward linphone-call-termination-pattern nil t)
-                (setq linphone-call-active nil)
+                (setq linphone-call-active t
+                      linphone-current-control 'linphone-active-call-control))
+               ((and linphone-call-active
+                     (re-search-backward linphone-call-termination-pattern nil t))
                 (linphone-mute)
                 (linphone-play-sound linphone-hangup-sound)
-                (setq linphone-current-control 'linphone-general-control))
-               ((re-search-backward linphone-call-request-pattern nil t)
-                (setq linphone-backend-response (match-string 0))
-                (setq linphone-current-call (match-string 1))
-                (setq linphone-current-control 'linphone-incoming-call-control))
-               ((re-search-backward linphone-call-progress-pattern nil t)
-                (setq linphone-backend-response (match-string 0))
-                (setq linphone-current-call (match-string 1))
-                (setq linphone-current-control 'linphone-outgoing-call-control))
-               ((re-search-backward linphone-call-failure-pattern nil t)
-                (setq linphone-backend-response (match-string 0))
+                (setq linphone-call-active nil
+                      linphone-current-control 'linphone-general-control))
+               ((and linphone-online
+                     (re-search-backward linphone-call-request-pattern nil t))
+                (setq linphone-backend-response (match-string 0)
+                      linphone-current-call (match-string 1)
+                      linphone-current-control 'linphone-incoming-call-control))
+               ((and linphone-online
+                     (re-search-backward linphone-call-progress-pattern nil t))
+                (setq linphone-backend-response (match-string 0)
+                      linphone-current-call (match-string 1)
+                      linphone-current-control 'linphone-outgoing-call-control))
+               ((and linphone-online
+                     (re-search-backward linphone-call-failure-pattern nil t))
+                (when linphone-call-active
+                  (linphone-mute))
                 (linphone-play-sound linphone-hangup-sound)
-                (setq linphone-current-control 'linphone-notification))
+                (setq linphone-backend-response (match-string 0)
+                      linphone-call-active nil
+                      linphone-current-control 'linphone-notification))
                (t nil))
               linphone-control-change))
     (when (or linphone-backend-ready
