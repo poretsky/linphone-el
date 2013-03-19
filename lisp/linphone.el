@@ -102,6 +102,19 @@
 Don't touch this stuff unless you really know what you are doing."
   :group 'linphone)
 
+(defcustom linphone-autostart nil
+  "Run Linphone automatically in background
+every time when Emacs starts up. There is no sense to set this option
+for current session. It affects only the startup sequence."
+  :type 'boolean
+  :set (lambda (symbol value)
+         (custom-set-default symbol value)
+         (when value
+           (add-hook 'emacs-startup-hook 'linphone)))
+  :initialize 'custom-initialize-default
+  :require 'linphone
+  :group 'linphone)
+
 (defcustom linphone-online-sound (expand-file-name "online.wav" linphone-sounds-directory)
   "Sound file played when going online."
   :type '(choice (const :tag "No sound")
@@ -420,8 +433,9 @@ Each action should be represented by function without arguments.")
     (linphone-log-show))
   (widget-insert "\n"))
 
-(defun linphone-general-control ()
-  "General control panel popup."
+(defun linphone-general-control (&optional show)
+  "General control panel constructor. If optional argument is non-nil
+the constructed panel will be popped up."
   (linphone-arrange-control-panel
    (format "Internet telephone %s"
            (if linphone-online
@@ -441,7 +455,8 @@ Each action should be represented by function without arguments.")
     (linphone-panel-footer)
     (widget-setup)
     (widget-forward 1))
-  (pop-to-buffer linphone-control-panel))
+  (when show
+    (pop-to-buffer linphone-control-panel)))
 
 ;;}}}
 ;;{{{ Parsing backend responses
@@ -579,20 +594,24 @@ Each action should be represented by function without arguments.")
 ;;}}}
 ;;{{{ Interactive commands
 
-(defun linphone ()
+(defun linphone (&optional show)
   "The main Linphone entry point.
-Start the backend program if necessary and popup control panel."
-  (interactive)
+Start the backend program if necessary and popup control panel if
+optional argument is non-nil or the function is called interactively."
+  (interactive "p")
   (if (and linphone-process
            (eq (process-status linphone-process) 'run))
-      (if (get-buffer linphone-control-panel)
-          (pop-to-buffer linphone-control-panel)
-        (unless linphone-current-control
-          (setq linphone-current-control 'linphone-general-control))
-        (funcall linphone-current-control))
+      (when show
+        (if (get-buffer linphone-control-panel)
+            (pop-to-buffer linphone-control-panel)
+          (unless linphone-current-control
+            (setq linphone-current-control 'linphone-general-control))
+          (if (eq linphone-current-control 'linphone-general-control)
+              (linphone-general-control show)
+            (funcall linphone-current-control))))
     (linphone-launch)
     (setq linphone-current-control 'linphone-general-control)
-    (funcall linphone-current-control)))
+    (funcall linphone-current-control show)))
 
 ;;}}}
 
