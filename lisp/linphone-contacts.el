@@ -180,8 +180,7 @@ and store it in the internal list."
                  :notify (lambda (button &rest ignore)
                            (linphone-contacts-delete (widget-value button))
                            (setq linphone-pending-actions (list 'linphone-refresh-contacts))
-                           (when linphone-contacts-display-position
-                             (goto-char linphone-contacts-display-position)))
+                           (forward-line 0))
                  (aref item 0)))
 
 (defun linphone-contacts-add-button ()
