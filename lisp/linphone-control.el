@@ -95,8 +95,9 @@ The string placeholder is to be replaced by the actual target address."
                  :tag "Standby"
                  :help-echo "Run in background waiting for incoming calls"
                  :notify (lambda (&rest ignore)
+                           (bury-buffer)
                            (condition-case nil
-                               (kill-buffer-and-window)
+                               (delete-window)
                              (error nil)))
                  "Standby"))
 
