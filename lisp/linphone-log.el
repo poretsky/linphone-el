@@ -40,6 +40,7 @@
 (require 'custom)
 (require 'widget)
 (eval-when-compile
+  (require 'cl)
   (require 'wid-edit))
 
 (require 'linphone)
