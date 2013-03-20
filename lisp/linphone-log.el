@@ -86,6 +86,11 @@ Zero or negative value means no restrictions."
   :type '(choice (const :tag "Unrestricted" nil) integer)
   :group 'linphone-logs)
 
+(defcustom linphone-log-get-command "call-logs"
+  "Linphone command to get log info."
+  :type 'string
+  :group 'linphone-backend)
+
 (defcustom linphone-log-incoming-call-detector "Incoming"
   "Incoming call detector string for matching."
   :type 'string
@@ -126,6 +131,14 @@ The string placeholder is to be replaced by a call type detector string."
   "Regular expression to retrieve and parse call status info."
   :type 'regexp
   :group 'linphone-backend)
+
+;;}}}
+;;{{{ Request data from the backend
+
+(defun linphone-log-refresh ()
+  "Refresh log info."
+  (linphone-command linphone-log-get-command)
+  (setq linphone-log-requested t))
 
 ;;}}}
 ;;{{{ Parse log content
@@ -226,7 +239,7 @@ The string placeholder is to be replaced by a call type detector string."
                  :tag "Refresh"
                  :help-echo "Refresh log info"
                  :notify (lambda (&rest ignore)
-                           (linphone-refresh-log))
+                           (linphone-log-refresh))
                  "Refresh"))
 
 (defun linphone-log-call-button (item)

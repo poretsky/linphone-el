@@ -47,6 +47,11 @@
 ;;}}}
 ;;{{{ Customizations
 
+(defcustom linphone-contacts-get-command "friend list"
+  "Linphone command to get contact list."
+  :type 'string
+  :group 'linphone-backend)
+
 (defcustom linphone-contacts-call-command-format "friend call %d"
   "Format string to construct a contact call command.
 The number placeholder is to be replaced by the contact index."
@@ -85,6 +90,14 @@ The number placeholder is to be replaced by the contact index."
   "Regular expression to extract address info from the backend supplied list."
   :type 'regexp
   :group 'linphone-backend)
+
+;;}}}
+;;{{{ Request data from the backend
+
+(defun linphone-contacts-refresh ()
+  "Refresh contacts info."
+  (linphone-command linphone-contacts-get-command)
+  (setq linphone-contacts-requested t))
 
 ;;}}}
 ;;{{{ Fill out contacts list
@@ -139,7 +152,7 @@ and store it in the internal list."
   (unless (and address (string-match-p "\\w" address))
     (error "Invalid contact address"))
   (linphone-command (format linphone-contacts-add-command-format name address))
-  (setq linphone-pending-actions (list 'linphone-refresh-contacts)))
+  (setq linphone-pending-actions (list 'linphone-contacts-refresh)))
 
 ;;}}}
 ;;{{{ Control widgets
@@ -179,7 +192,7 @@ and store it in the internal list."
                  :help-echo (concat "Delete contact info for " (aref item 1))
                  :notify (lambda (button &rest ignore)
                            (linphone-contacts-delete (widget-value button))
-                           (setq linphone-pending-actions (list 'linphone-refresh-contacts))
+                           (setq linphone-pending-actions (list 'linphone-contacts-refresh))
                            (forward-line 0))
                  (aref item 0)))
 
@@ -201,7 +214,7 @@ and store it in the internal list."
                  :help-echo "Clear all contacts info"
                  :notify (lambda (&rest ignore)
                            (linphone-command linphone-contacts-clear-command)
-                           (setq linphone-pending-actions (list 'linphone-refresh-contacts))
+                           (setq linphone-pending-actions (list 'linphone-contacts-refresh))
                            (when linphone-contacts-display-position
                              (goto-char linphone-contacts-display-position)))
                  "Clear all"))

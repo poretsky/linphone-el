@@ -37,67 +37,13 @@
 ;;}}}
 ;;{{{ Requirements
 
-(require 'custom)
 (require 'widget)
 (eval-when-compile
   (require 'wid-edit))
 
 (require 'linphone)
+(require 'linphone-display)
 (require 'linphone-control)
-
-;;}}}
-;;{{{ Customizations
-
-(defcustom linphone-mute-command "amixer set Capture,0 nocap"
-  "Shell command that effectively mutes microphone."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-unmute-command "amixer set Capture,0 cap"
-  "Shell command that effectively unmutes microphone."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-mic-tune-command "amixer set Capture,0 %d%%"
-  "Format of the shell command to control microphone gain.
-This format specification must have one placeholder for numeric
-parameter to be replaced by actual gain value."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-mic-gain nil
-  "Microphone gain level in percents.
-The value must be in the range 0 through 100 inclusively.
-if nil is specified, then the current level will be left untouched."
-  :type '(choice (const :tag "Untouched" nil)
-                 (integer :tag "Explicit value in percents"))
-  :initialize 'custom-initialize-default
-  :set (lambda (symbol value)
-         (when value
-           (when (or (< value 0) (> value 100))
-             (error "Linphone microphone gain value is out of range"))
-           (call-process-shell-command (format linphone-mic-tune-command value)))
-         (custom-set-default symbol value))
-  :set-after '(linphone-mic-tune-command)
-  :group 'linphone)
-
-;;}}}
-;;{{{ Utilities
-
-(defvar linphone-mic-muted nil
-  "Indicates that the microphone is muted.")
-
-(defun linphone-mute ()
-  "Mute microphone."
-  (setq linphone-mic-muted t)
-  (call-process-shell-command linphone-mute-command))
-
-(defun linphone-unmute ()
-  "Unmute microphone."
-  (setq linphone-mic-muted nil)
-  (when (numberp linphone-mic-gain)
-    (call-process-shell-command (format linphone-mic-tune-command linphone-mic-gain)))
-  (call-process-shell-command linphone-unmute-command))
 
 ;;}}}
 ;;{{{ Control widgets

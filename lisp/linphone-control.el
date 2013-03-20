@@ -28,7 +28,7 @@
 
 ;;; Commentary:
 
-;;; This module provides general Linphone control functionality.
+;;; This module provides Linphone control widgets for online mode.
 ;;; It will be automatically loaded by the main Linphone interface
 ;;; when necessary, so the file should be available on the load path.
 
@@ -43,6 +43,7 @@
   (require 'wid-edit))
 
 (require 'linphone)
+(require 'linphone-display)
 
 ;;}}}
 ;;{{{ Customizations
@@ -70,6 +71,11 @@ The string placeholder is to be replaced by the actual target address."
 
 (defcustom linphone-check-registration-command "status register"
   "Command to check registration status."
+  :type 'string
+  :group 'linphone-backend)
+
+(defcustom linphone-autoanswer-disable-command "autoanswer disable"
+  "The command string to turn autoanswer mode off."
   :type 'string
   :group 'linphone-backend)
 
@@ -126,6 +132,18 @@ The string placeholder is to be replaced by the actual target address."
                            (linphone-command linphone-cancel-command))
                  label))
 
+(defun linphone-answer-mode-button ()
+  "Button to toggle answer mode."
+  (widget-create 'radio-button-choice
+                 :value linphone-autoanswer
+                 :notify (lambda (widget &rest ignore)
+                           (if (widget-value widget)
+                               (linphone-autoanswer-enable)
+                             (linphone-command linphone-autoanswer-disable-command))
+                           (setq linphone-autoanswer (widget-value widget)))
+                 '(item :tag "Manual" nil)
+                 '(item :tag "Automatic" t)))
+
 (defun linphone-unregister-button ()
   "Button to cancel registration."
   (widget-create 'push-button
@@ -156,7 +174,9 @@ The string placeholder is to be replaced by the actual target address."
   (linphone-quit-button)
   (widget-insert "    ")
   (linphone-customize-button)
-  (widget-insert "\n\n    ")
+  (widget-insert "\n\nAnswer mode:\n")
+  (linphone-answer-mode-button)
+  (widget-insert "\n    ")
   (linphone-unregister-button))
 
 (defun linphone-incoming-call-control ()
