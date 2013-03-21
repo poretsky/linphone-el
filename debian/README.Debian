@@ -3,13 +3,21 @@ The Debian Package linphone-el
 
 You can activate Linphone in Emacs either via menu or by typing
 "M-x linphone <RET>". The control panel with several buttons
-will be popped up. To make an outgoing call press "Call" button.
-If you just want to stand by waiting for incoming calls,
-press "Standby" button. The control panel will vanish
-and Linphone will continue proceeding in background.
-When incoming call will be encountered, corresponding control panel
-will appear in a separate window. Then you can switch to this window
-and accept or reject the call by pressing an appropriate button.
+will be popped up. At first you have to register your account
+by pressing "Register" button and providing the account data:
+your identity (full SIP address in the form user@some.host),
+proxy host name if it differs from the one included in your identity
+and password. After successful registration the main control panel
+will change and suggest more options. To make an outgoing call
+press "Call" button and enter target SIP address. If you just want
+to stand by waiting for incoming calls, press "Standby" button.
+The control panel will vanish and Linphone will continue proceeding
+in background. When incoming call will be encountered,
+the corresponding control panel will appear in a separate window.
+Then you can switch to this window and accept or reject the call
+by pressing an appropriate button. You can change your account
+at any time by pressing "Unregister" button on the main control panel
+and then registering again with new data.
 
 Note!
 
