@@ -71,6 +71,24 @@ proxy host name and your password."
 ;;}}}
 ;;{{{ Utilities
 
+(defvar linphone-display-contacts (cons linphone-show-contacts 'linphone-contacts-refresh)
+  "Linphone log visibility control.")
+
+(defvar linphone-display-log (cons linphone-show-log 'linphone-log-refresh)
+  "Linphone log visibility control.")
+
+(defun linphone-refresh (control)
+  "Refresh info by specified control."
+  (when (car control)
+    (if linphone-backend-ready
+        (funcall (cdr control))
+      (add-to-list 'linphone-pending-actions (cdr control) 'append))))
+
+(defun linphone-schedule-log-update ()
+  "Schedule log update if it is visible."
+  (let ((linphone-backend-ready nil))
+    (linphone-refresh linphone-display-log)))
+
 (defun linphone-validate-sip-address (address &optional host-only)
   "Check and validate supplied sip address.
 If optional second argument is not nil, only host name is required.
@@ -100,12 +118,6 @@ Navigate around and press buttons.
 
 ;;}}}
 ;;{{{ Control widgets
-
-(defvar linphone-display-contacts (cons linphone-show-contacts 'linphone-contacts-refresh)
-  "Linphone log visibility control.")
-
-(defvar linphone-display-log (cons linphone-show-log 'linphone-log-refresh)
-  "Linphone log visibility control.")
 
 (defun linphone-register-button ()
   "Button to register or change account."
@@ -161,20 +173,14 @@ Navigate around and press buttons.
                  :notify (lambda (widget &rest ignore)
                            (if (setcar (widget-get widget ':control)
                                        (widget-value widget))
-                               (funcall (cdr (widget-get widget ':control)))
+                               (linphone-refresh (widget-get widget ':control))
                              (let ((position (point)))
                                (funcall linphone-current-control)
                                (goto-char position))))))
 
-(defun linphone-refresh (control)
-  "Refresh info by specified control."
-  (when (car control)
-    (if linphone-backend-ready
-        (funcall (cdr control))
-      (add-to-list 'linphone-pending-actions (cdr control) 'append))))
-
 (defun linphone-arrange-control-panel (header)
   "Arrange fresh control panel with specified header."
+  (setq linphone-displayed-control linphone-current-control)
   (unless (get-buffer linphone-control-panel)
     (linphone-refresh linphone-display-contacts)
     (linphone-refresh linphone-display-log))

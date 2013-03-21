@@ -105,6 +105,9 @@ The number placeholder is to be replaced by the contact index."
 (defvar linphone-contacts-list nil
   "Address book content.")
 
+(defvar linphone-contacts-loaded nil
+  "Indicates that the contact list has been loaded already.")
+
 (defun linphone-contacts-extract ()
   "Parse backend supplied contacts info in current buffer
 and store it in the internal list."
@@ -126,7 +129,8 @@ and store it in the internal list."
     (setq linphone-contacts-list
           (sort contacts
                 (lambda (first second)
-                  (string-lessp (aref first 1) (aref second 1)))))))
+                  (string-lessp (aref first 1) (aref second 1))))))
+  (setq linphone-contacts-loaded t))
 
 ;;}}}
 ;;{{{ Utility functions

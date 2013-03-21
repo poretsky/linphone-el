@@ -44,9 +44,9 @@
   (require 'wid-edit))
 
 (require 'linphone)
+(require 'linphone-contacts)
 
 (autoload 'linphone-call "linphone-control")
-(autoload 'linphone-contacts-add "linphone-contacts")
 
 ;;}}}
 ;;{{{ Customizations
@@ -56,27 +56,37 @@
   :group 'linphone)
 
 (defcustom linphone-log-show-missed-calls nil
-  "Show missed calls list by default."
+  "Show missed calls list by default.
+In fact, the list visibility can be toggled at any time from the
+control panel. This option merely defines the state to start with."
   :type 'boolean
   :group 'linphone-logs)
 
 (defcustom linphone-log-show-received-calls nil
-  "Show received calls list by default."
+  "Show received calls list by default.
+In fact, the list visibility can be toggled at any time from the
+control panel. This option merely defines the state to start with."
   :type 'boolean
   :group 'linphone-logs)
 
 (defcustom linphone-log-show-dialed-calls nil
-  "Show dialed calls list by default."
+  "Show dialed calls list by default.
+In fact, the list visibility can be toggled at any time from the
+control panel. This option merely defines the state to start with."
   :type 'boolean
   :group 'linphone-logs)
 
 (defcustom linphone-log-show-unclassified-calls nil
-  "Show unclassified calls list by default."
+  "Show unclassified calls list by default.
+In fact, the list visibility can be toggled at any time from the
+control panel. This option merely defines the state to start with."
   :type 'boolean
   :group 'linphone-logs)
 
 (defcustom linphone-log-show-all-calls nil
-  "Show all calls list by default."
+  "Show all calls list by default.
+In fact, the list visibility can be toggled at any time from the
+control panel. This option merely defines the state to start with."
   :type 'boolean
   :group 'linphone-logs)
 
@@ -133,12 +143,31 @@ The string placeholder is to be replaced by a call type detector string."
   :group 'linphone-backend)
 
 ;;}}}
-;;{{{ Request data from the backend
+;;{{{ Utilities
+
+(defun linphone-log-request-info ()
+  "Request log info from the backend."
+  (linphone-command linphone-log-get-command)
+  (setq linphone-log-requested t))
 
 (defun linphone-log-refresh ()
   "Refresh log info."
-  (linphone-command linphone-log-get-command)
-  (setq linphone-log-requested t))
+  (if linphone-contacts-loaded
+      (linphone-log-request-info)
+    (add-to-list 'linphone-pending-actions 'linphone-log-request-info 'append)
+    (linphone-contacts-refresh)))
+
+(defun linphone-log-search-contacts (address)
+  "Search names in the contact list by specified address."
+  (when (stringp address)
+    (let ((found nil))
+      (mapc (lambda (item)
+              (and (stringp (aref item 2))
+                   (stringp (aref item 1))
+                   (string-equal (aref item 2) address)
+                   (add-to-list 'found (aref item 1) 'append)))
+            linphone-contacts-list)
+      found)))
 
 ;;}}}
 ;;{{{ Parse log content
@@ -239,7 +268,9 @@ The string placeholder is to be replaced by a call type detector string."
                  :tag "Refresh"
                  :help-echo "Refresh log info"
                  :notify (lambda (&rest ignore)
-                           (linphone-log-refresh))
+                           (if linphone-backend-ready
+                               (linphone-log-refresh)
+                             (add-to-list 'linphone-pending-actions 'linphone-log-refresh 'append)))
                  "Refresh"))
 
 (defun linphone-log-call-button (item)
@@ -314,15 +345,24 @@ The string placeholder is to be replaced by a call type detector string."
                  ((string-equal linphone-log-outgoing-call-detector (aref item 0))
                   (widget-insert "To "))
                  (t nil))
-                (when (aref item 2)
-                  (widget-insert (aref item 2) " "))
-                (widget-insert "<" (aref item 3) ">")
-                (when (and (aref item 3) (string-match-p "\\w" (aref item 3)))
-                  (when (and linphone-online (not linphone-call-active))
-                    (widget-insert " ")
-                    (linphone-log-call-button item))
-                  (widget-insert " ")
-                  (linphone-log-remember-button item))
+                (let ((name (aref item 2))
+                      (found (linphone-log-search-contacts (aref item 3)))
+                      (known nil))
+                  (when (or (= (length found) 1)
+                            (and (not (stringp name))
+                                 (> (length found) 0)))
+                    (setq name (car found)
+                          known t))
+                  (when name
+                    (widget-insert name " "))
+                  (widget-insert "<" (aref item 3) ">")
+                  (when (and (aref item 3) (string-match-p "\\w" (aref item 3)))
+                    (when (and linphone-online (not linphone-call-active))
+                      (widget-insert " ")
+                      (linphone-log-call-button item))
+                    (unless known
+                      (widget-insert " ")
+                      (linphone-log-remember-button item))))
                 (widget-insert "\n" (aref item 5))
                 (when (aref item 4)
                   (widget-insert " after " (aref item 4)))

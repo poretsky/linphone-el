@@ -68,6 +68,7 @@
 (require 'custom)
 
 (autoload 'linphone-general-control "linphone-display")
+(autoload 'linphone-schedule-log-update "linphone-display")
 
 (autoload 'linphone-online-controls "linphone-control")
 (autoload 'linphone-incoming-call-control "linphone-control")
@@ -254,6 +255,11 @@ parameter to be replaced by actual gain value."
   :type 'regexp
   :group 'linphone-backend)
 
+(defcustom linphone-missed-call-pattern "^You have missed [0-9]+ calls?"
+  "Regular expression that matches against missed call message."
+  :type 'regexp
+  :group 'linphone-backend)
+
 (defcustom linphone-online-state-string "successful"
   "Online status indication string."
   :type 'string
@@ -368,15 +374,26 @@ Each action should be represented by function without arguments.")
 ;;}}}
 ;;{{{ Parsing backend responses
 
+(defvar linphone-displayed-control nil
+  "Stores currently displayed control.")
+
 (defvar linphone-control-change nil
   "Indicates that current control panel is changed and should be updated.")
+
+(defun linphone-list-display-update ()
+  "Generates special value for linphone-control-change when control
+panel should be updated after updating log or contact list info."
+  (and (or (eq linphone-current-control 'linphone-general-control)
+           (eq linphone-current-control 'linphone-active-call-control))
+       (or (not (eq linphone-displayed-control linphone-current-control))
+           'save-position)))
 
 (defun linphone-output-parser (proc string)
   "Filter function to parse Linphone backend output."
   (with-current-buffer (process-buffer proc)
     (goto-char (process-mark proc))
     (insert string)
-    (when (re-search-backward linphone-prompt-pattern nil t)
+    (while (re-search-backward linphone-prompt-pattern nil t)
       (replace-match "")
       (setq linphone-backend-ready t))
     (goto-char (point-max))
@@ -401,61 +418,70 @@ Each action should be represented by function without arguments.")
           (setq linphone-online nil
                 linphone-control-change t)
           (linphone-play-sound linphone-offline-sound)
-          (message "%s" (match-string 0)))))
-    (goto-char (point-max))
-    (setq linphone-control-change
-          (or (cond
-               (linphone-contacts-requested
-                (when linphone-backend-ready
-                  (linphone-contacts-extract)
-                  (setq linphone-contacts-requested nil)
-                  (or (eq linphone-current-control 'linphone-general-control)
-                      (eq linphone-current-control 'linphone-active-call-control))))
-               (linphone-log-requested
-                (when linphone-backend-ready
-                  (linphone-log-acquire)
-                  (setq linphone-log-requested nil)
-                  (or (eq linphone-current-control 'linphone-general-control)
-                      (eq linphone-current-control 'linphone-active-call-control))))
-               ((re-search-backward linphone-unreg-state-pattern nil t)
-                (when linphone-online
-                  (linphone-play-sound linphone-offline-sound)
-                  (setq linphone-online nil) t))
-               ((and linphone-online
-                     (re-search-backward linphone-call-connection-pattern nil t))
-                (linphone-unmute)
-                (setq linphone-call-active t
-                      linphone-current-control 'linphone-active-call-control))
-               ((and linphone-call-active
-                     (re-search-backward linphone-call-termination-pattern nil t))
-                (linphone-mute)
-                (linphone-play-sound linphone-hangup-sound)
-                (setq linphone-call-active nil
-                      linphone-current-control 'linphone-general-control))
-               ((and linphone-online
-                     (re-search-backward linphone-call-request-pattern nil t))
-                (setq linphone-backend-response (match-string 0)
-                      linphone-current-call (match-string 1)
-                      linphone-current-control 'linphone-incoming-call-control))
-               ((and linphone-online
-                     (re-search-backward linphone-call-progress-pattern nil t))
-                (setq linphone-backend-response (match-string 0)
-                      linphone-current-call (match-string 1)
-                      linphone-current-control 'linphone-outgoing-call-control))
-               ((and linphone-online
-                     (re-search-backward linphone-call-failure-pattern nil t))
-                (when linphone-call-active
-                  (linphone-mute))
-                (linphone-play-sound linphone-hangup-sound)
-                (setq linphone-backend-response (match-string 0)
-                      linphone-call-active nil
-                      linphone-current-control 'linphone-notification))
-               ((re-search-backward linphone-answer-mode-change-pattern nil t)
-                (message "%s" (match-string 0)) nil)
-               (t nil))
-              linphone-control-change))
-    (when (or linphone-backend-ready
-              (not (or linphone-contacts-requested linphone-log-requested)))
+          (message "%s" (match-string 0))))
+      (goto-char (point-max)))
+    (when (re-search-backward linphone-missed-call-pattern nil t)
+      (message "%s in this session" (match-string 0))
+      (goto-char (point-max)))
+    (cond
+     (linphone-contacts-requested
+      (when linphone-backend-ready
+        (linphone-contacts-extract)
+        (setq linphone-contacts-requested nil
+              linphone-control-change (linphone-list-display-update))))
+     (linphone-log-requested
+      (when linphone-backend-ready
+        (linphone-log-acquire)
+        (setq linphone-log-requested nil
+              linphone-control-change (linphone-list-display-update))))
+     ((re-search-backward linphone-unreg-state-pattern nil t)
+      (when linphone-online
+        (linphone-play-sound linphone-offline-sound)
+        (setq linphone-online nil
+              linphone-control-change t)))
+     ((and linphone-online
+           (re-search-backward linphone-call-connection-pattern nil t))
+      (linphone-unmute)
+      (setq linphone-call-active t
+            linphone-current-control 'linphone-active-call-control
+            linphone-control-change t))
+     ((and linphone-online
+           (re-search-backward linphone-call-termination-pattern nil t))
+      (when linphone-call-active
+        (linphone-mute))
+      (linphone-play-sound linphone-hangup-sound)
+      (when (get-buffer linphone-control-panel)
+        (linphone-schedule-log-update))
+      (setq linphone-call-active nil
+            linphone-current-control 'linphone-general-control
+            linphone-control-change t))
+     ((and linphone-online
+           (re-search-backward linphone-call-request-pattern nil t))
+      (setq linphone-backend-response (match-string 0)
+            linphone-current-call (match-string 1)
+            linphone-current-control 'linphone-incoming-call-control
+            linphone-control-change t))
+     ((and linphone-online
+           (re-search-backward linphone-call-progress-pattern nil t))
+      (setq linphone-backend-response (match-string 0)
+            linphone-current-call (match-string 1)
+            linphone-current-control 'linphone-outgoing-call-control
+            linphone-control-change t))
+     ((and linphone-online
+           (re-search-backward linphone-call-failure-pattern nil t))
+      (when linphone-call-active
+        (linphone-mute))
+      (linphone-play-sound linphone-hangup-sound)
+      (when (get-buffer linphone-control-panel)
+        (linphone-schedule-log-update))
+      (setq linphone-backend-response (match-string 0)
+            linphone-call-active nil
+            linphone-current-control 'linphone-notification
+            linphone-control-change t))
+     ((re-search-backward linphone-answer-mode-change-pattern nil t)
+      (message "%s" (match-string 0)) nil)
+     (t nil))
+    (when linphone-backend-ready
       (goto-char (point-max))
       (forward-line 0)
       (delete-region (point-min) (point)))
@@ -464,7 +490,7 @@ Each action should be represented by function without arguments.")
       (let ((action (car linphone-pending-actions)))
         (setq linphone-pending-actions (cdr linphone-pending-actions))
         (funcall action))
-    (let ((position (and (or linphone-contacts-requested linphone-log-requested)
+    (let ((position (and (eq linphone-control-change 'save-position)
                          (string-equal (buffer-name) linphone-control-panel) (point))))
       (when (and linphone-current-control linphone-control-change
                  (or (get-buffer linphone-control-panel)

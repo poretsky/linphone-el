@@ -89,8 +89,26 @@ The string placeholder is to be replaced by the actual target address."
    (format linphone-call-command-format addr)))
 
 (defun linphone-check-registration-status ()
-  "Check registration status."
+  "Issue check registration status command."
   (linphone-command linphone-check-registration-command))
+
+(defun linphone-answer ()
+  "Issue call answer command."
+  (linphone-command linphone-answer-command))
+
+(defun linphone-cancel ()
+  "Issue call cancel command."
+  (linphone-command linphone-cancel-command))
+
+(defun linphone-autoanswer-disable ()
+  "Issue autoanswer disable command."
+  (linphone-command linphone-autoanswer-disable-command))
+
+(defun linphone-execute-or-schedule (action)
+  "Execute or schedule specified action."
+  (if linphone-backend-ready
+      (funcall action)
+    (push action linphone-pending-actions)))
 
 ;;}}}
 ;;{{{ Control widgets
@@ -121,7 +139,7 @@ The string placeholder is to be replaced by the actual target address."
   (widget-create 'push-button
                  :tag "Accept"
                  :notify (lambda (&rest ignore)
-                           (linphone-command linphone-answer-command))
+                           (linphone-execute-or-schedule 'linphone-answer))
                  "Accept"))
 
 (defun linphone-cancel-button (label)
@@ -129,7 +147,7 @@ The string placeholder is to be replaced by the actual target address."
   (widget-create 'push-button
                  :tag label
                  :notify (lambda (&rest ignore)
-                           (linphone-command linphone-cancel-command))
+                           (linphone-execute-or-schedule 'linphone-cancel))
                  label))
 
 (defun linphone-answer-mode-button ()
@@ -137,10 +155,10 @@ The string placeholder is to be replaced by the actual target address."
   (widget-create 'radio-button-choice
                  :value linphone-autoanswer
                  :notify (lambda (widget &rest ignore)
-                           (if (widget-value widget)
-                               (linphone-autoanswer-enable)
-                             (linphone-command linphone-autoanswer-disable-command))
-                           (setq linphone-autoanswer (widget-value widget)))
+                           (linphone-execute-or-schedule
+                            (if (setq linphone-autoanswer (widget-value widget))
+                                'linphone-autoanswer-enable
+                              'linphone-autoanswer-disable)))
                  '(item :tag "Manual" nil)
                  '(item :tag "Automatic" t)))
 
