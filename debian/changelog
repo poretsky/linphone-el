@@ -1,3 +1,16 @@
+linphone-el (2.0precise1) precise; urgency=low
+
+  * Totally new version. A lot of fixes and enhancements.
+  * Implemented address book and recent calls log.
+  * Implemented auto answer mode.
+  * Implemented initial registration form.
+  * Customization enhancements.
+  * Improved background mode and implemented customizable autostart
+    option.
+  * Implemented microphone gain control.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Thu, 21 Mar 2013 22:59:12 +0400
+
 linphone-el (1.2.2precise1) precise; urgency=low
 
   * Source directory is now not included into the load path, but
