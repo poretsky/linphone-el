@@ -77,8 +77,10 @@
 
 (autoload 'linphone-active-call-control "linphone-conversation")
 
-(autoload 'linphone-contacts-refresh "linphone-contacts")
-(autoload 'linphone-contacts-extract "linphone-contacts")
+(autoload 'linphone-contacts-refresh "linphone-contacts-core")
+(autoload 'linphone-contacts-extract "linphone-contacts-core")
+(autoload 'linphone-contacts-recognize "linphone-contacts-core")
+
 (autoload 'linphone-contacts-show "linphone-contacts")
 
 (autoload 'linphone-log-refresh "linphone-log")
@@ -380,6 +382,9 @@ Each action should be represented by function without arguments.")
 (defvar linphone-control-change nil
   "Indicates that current control panel is changed and should be updated.")
 
+(defvar linphone-contacts-loaded nil
+  "Indicates that the contact list has been loaded already.")
+
 (defun linphone-list-display-update ()
   "Generates special value for linphone-control-change when control
 panel should be updated after updating log or contact list info."
@@ -408,7 +413,11 @@ panel should be updated after updating log or contact list info."
             (setq linphone-online (match-string 1)
                   linphone-control-change t)
             (linphone-play-sound linphone-online-sound)
-            (message "%s" (match-string 0)))
+            (message "%s" (match-string 0))
+            (unless (or linphone-contacts-loaded
+                        (and linphone-autoanswer
+                             (null (get-buffer linphone-control-panel))))
+              (add-to-list 'linphone-pending-actions 'linphone-contacts-refresh 'append)))
         (when linphone-online
           (when linphone-call-active
             (linphone-mute)
@@ -457,6 +466,14 @@ panel should be updated after updating log or contact list info."
             linphone-control-change t))
      ((and linphone-online
            (re-search-backward linphone-call-request-pattern nil t))
+      (when linphone-contacts-loaded
+        (let ((caller (linphone-contacts-recognize (match-string 1))))
+          (when (and caller (aref caller 0))
+            (replace-match (format "\"%s\" <%s>"
+                                   (aref caller 1) (aref caller 2))
+                           t t nil 1)
+            (goto-char (point-max))
+            (re-search-backward linphone-call-request-pattern nil t))))
       (setq linphone-backend-response (match-string 0)
             linphone-current-call (match-string 1)
             linphone-current-control 'linphone-incoming-call-control
