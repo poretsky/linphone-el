@@ -102,7 +102,9 @@ The string placeholder is to be replaced by the actual target address."
 
 (defun linphone-autoanswer-disable ()
   "Issue autoanswer disable command."
-  (linphone-command linphone-autoanswer-disable-command))
+  (linphone-command linphone-autoanswer-disable-command)
+  (unless linphone-contacts-loaded
+    (add-to-list 'linphone-pending-actions 'linphone-contacts-refresh 'append)))
 
 (defun linphone-execute-or-schedule (action)
   "Execute or schedule specified action."

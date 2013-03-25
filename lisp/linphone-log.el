@@ -44,7 +44,8 @@
   (require 'wid-edit))
 
 (require 'linphone)
-(require 'linphone-contacts)
+(require 'linphone-contacts-core)
+(require 'linphone-contacts-lib)
 
 (autoload 'linphone-call "linphone-control")
 
@@ -122,12 +123,12 @@ The string placeholder is to be replaced by a call type detector string."
   :type 'string
   :group 'linphone-backend)
 
-(defcustom linphone-log-call-issuer-retriever "^From: \\(\"\\(.*\\)\" \\)?<\\(.*\\)>$"
+(defcustom linphone-log-call-issuer-retriever "^From: \\(.*\\)$"
   "Regular expression to retrieve and parse call issuer info."
   :type 'regexp
   :group 'linphone-backend)
 
-(defcustom linphone-log-call-target-retriever "^To: \\(\"\\(.*\\)\" \\)?<\\(.*\\)>$"
+(defcustom linphone-log-call-target-retriever "^To: \\(.*\\)$"
   "Regular expression to retrieve and parse call target info."
   :type 'regexp
   :group 'linphone-backend)
@@ -156,18 +157,6 @@ The string placeholder is to be replaced by a call type detector string."
       (linphone-log-request-info)
     (add-to-list 'linphone-pending-actions 'linphone-log-request-info 'append)
     (linphone-contacts-refresh)))
-
-(defun linphone-log-search-contacts (address)
-  "Search names in the contact list by specified address."
-  (when (stringp address)
-    (let ((found nil))
-      (mapc (lambda (item)
-              (and (stringp (aref item 2))
-                   (stringp (aref item 1))
-                   (string-equal (aref item 2) address)
-                   (add-to-list 'found (aref item 1) 'append)))
-            linphone-contacts-list)
-      found)))
 
 ;;}}}
 ;;{{{ Parse log content
@@ -210,14 +199,14 @@ The string placeholder is to be replaced by a call type detector string."
                        ((string-equal type linphone-log-incoming-call-detector)
                         (goto-char item-start)
                         (if (re-search-forward linphone-log-call-issuer-retriever item-end t)
-                            (cons (match-string 2) (match-string 3))
-                          (cons nil nil)))
+                            (match-string 1)
+                          nil))
                        ((string-equal type linphone-log-outgoing-call-detector)
                         (goto-char item-start)
                         (if (re-search-forward linphone-log-call-target-retriever item-end t)
-                            (cons (match-string 2) (match-string 3))
-                          (cons nil nil)))
-                       (t (cons nil nil))))
+                            (match-string 1)
+                          nil))
+                       (t nil)))
              (duration (progn (goto-char item-start)
                               (and (re-search-forward linphone-log-call-duration-retriever item-end t)
                                    (match-string 1))))
@@ -234,7 +223,7 @@ The string placeholder is to be replaced by a call type detector string."
          (t (incf (cdr linphone-log-unclassified-calls))))
         (goto-char item-start)
         (add-to-list 'linphone-log-call-list
-                     (vector type date (car partner) (cdr partner) duration status)
+                     (vector type date partner duration status)
                      'append))))
   (setcdr linphone-log-all-calls
           (if linphone-log-call-list
@@ -273,29 +262,25 @@ The string placeholder is to be replaced by a call type detector string."
                              (add-to-list 'linphone-pending-actions 'linphone-log-refresh 'append)))
                  "Refresh"))
 
-(defun linphone-log-call-button (item)
+(defun linphone-log-call-button (name address)
   "Button to call the item."
   (widget-create 'push-button
                  :tag "Call"
-                 :help-echo (concat "Call "
-                                    (or (aref item 2) (aref item 3))
-                                    " just now")
+                 :help-echo (format "Call %s just now" (or name address))
                  :notify (lambda (button &rest ignore)
                            (linphone-call (widget-value button)))
-                 (aref item 3)))
+                 address))
 
-(defun linphone-log-remember-button (item)
+(defun linphone-log-remember-button (name address)
   "Button to remember the item as a contact."
   (widget-create 'push-button
                  :tag "Remember"
-                 :help-echo (concat "Remember "
-                                    (or (aref item 2) (aref item 3))
-                                    " as a contact")
+                 :help-echo (format "Remember %s as a contact" (or name address))
                  :notify (lambda (button &rest ignore)
                            (linphone-contacts-add
-                            (read-string "Name: " (aref (widget-value button) 2))
-                            (aref (widget-value button) 3)))
-                 item))
+                            (read-string "Name: " (cdr (widget-value button)))
+                            (car (widget-value button))))
+                 (cons address name)))
 
 ;;}}}
 ;;{{{ Calls classification predicates
@@ -345,27 +330,22 @@ The string placeholder is to be replaced by a call type detector string."
                  ((string-equal linphone-log-outgoing-call-detector (aref item 0))
                   (widget-insert "To "))
                  (t nil))
-                (let ((name (aref item 2))
-                      (found (linphone-log-search-contacts (aref item 3)))
-                      (known nil))
-                  (when (or (= (length found) 1)
-                            (and (not (stringp name))
-                                 (> (length found) 0)))
-                    (setq name (car found)
-                          known t))
-                  (when name
-                    (widget-insert name " "))
-                  (widget-insert "<" (aref item 3) ">")
-                  (when (and (aref item 3) (string-match-p "\\w" (aref item 3)))
+                (let ((partner (linphone-contacts-recognize (aref item 2))))
+                  (when (aref partner 1)
+                    (widget-insert (aref partner 1) " "))
+                  (widget-insert "<" (aref partner 2) ">")
+                  (when (and (aref partner 2) (string-match-p "\\w" (aref partner 2)))
                     (when (and linphone-online (not linphone-call-active))
                       (widget-insert " ")
-                      (linphone-log-call-button item))
-                    (unless known
+                      (if (aref partner 0)
+                          (linphone-contacts-call-button (aref partner 0) (aref partner 1))
+                        (linphone-log-call-button (aref partner 1) (aref partner 2))))
+                    (unless (aref partner 0)
                       (widget-insert " ")
-                      (linphone-log-remember-button item))))
-                (widget-insert "\n" (aref item 5))
-                (when (aref item 4)
-                  (widget-insert " after " (aref item 4)))
+                      (linphone-log-remember-button (aref partner 1) (aref partner 2)))))
+                (widget-insert "\n" (aref item 4))
+                (when (aref item 3)
+                  (widget-insert " after " (aref item 3)))
                 (widget-insert "\n")))
             linphone-log-call-list)
       (widget-insert (format "\nShown %d of %d\n" count (cdr control))))))
