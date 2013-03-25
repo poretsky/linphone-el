@@ -43,27 +43,11 @@
   (require 'wid-edit))
 
 (require 'linphone)
+(require 'linphone-contacts-core)
+(require 'linphone-contacts-lib)
 
 ;;}}}
 ;;{{{ Customizations
-
-(defcustom linphone-contacts-get-command "friend list"
-  "Linphone command to get contact list."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-contacts-call-command-format "friend call %d"
-  "Format string to construct a contact call command.
-The number placeholder is to be replaced by the contact index."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-contacts-add-command-format "friend add \"%s\" %s"
-  "Format string to construct a contact add command.
-String placeholders are to be replaced by the name and address
-of a new contact."
-  :type 'string
-  :group 'linphone-backend)
 
 (defcustom linphone-contacts-delete-command-format "friend delete %d"
   "Format string to construct a contact delete command.
@@ -75,62 +59,6 @@ The number placeholder is to be replaced by the contact index."
   "Command string to clear all contacts info."
   :type 'string
   :group 'linphone-backend)
-
-(defcustom linphone-contacts-item-extractor "^\\*+ Friend \\([0-9]+\\) \\*+$"
-  "Regular expression to parse item header in the backend supplied list."
-  :type 'regexp
-  :group 'linphone-backend)
-
-(defcustom linphone-contacts-name-extractor "^name: \\(.*\\)$"
-  "Regular expression to extract name info from the backend supplied list."
-  :type 'regexp
-  :group 'linphone-backend)
-
-(defcustom linphone-contacts-address-extractor "^address: <\\(.*\\)>$"
-  "Regular expression to extract address info from the backend supplied list."
-  :type 'regexp
-  :group 'linphone-backend)
-
-;;}}}
-;;{{{ Request data from the backend
-
-(defun linphone-contacts-refresh ()
-  "Refresh contacts info."
-  (linphone-command linphone-contacts-get-command)
-  (setq linphone-contacts-requested t))
-
-;;}}}
-;;{{{ Fill out contacts list
-
-(defvar linphone-contacts-list nil
-  "Address book content.")
-
-(defvar linphone-contacts-loaded nil
-  "Indicates that the contact list has been loaded already.")
-
-(defun linphone-contacts-extract ()
-  "Parse backend supplied contacts info in current buffer
-and store it in the internal list."
-  (goto-char (point-min))
-  (let ((contacts nil))
-    (while (re-search-forward linphone-contacts-item-extractor nil t)
-      (let* ((item-start (point))
-             (index (string-to-number (match-string 1)))
-             (item-end (re-search-forward linphone-contacts-item-extractor nil t))
-             (name (progn (goto-char item-start)
-                          (and (re-search-forward linphone-contacts-name-extractor item-end t)
-                               (match-string 1))))
-             (address (progn (goto-char item-start)
-                             (and (re-search-forward linphone-contacts-address-extractor item-end t)
-                                  (match-string 1)))))
-        (goto-char item-start)
-        (add-to-list 'contacts
-                     (vector index name address nil))))
-    (setq linphone-contacts-list
-          (sort contacts
-                (lambda (first second)
-                  (string-lessp (aref first 1) (aref second 1))))))
-  (setq linphone-contacts-loaded t))
 
 ;;}}}
 ;;{{{ Utility functions
@@ -148,31 +76,11 @@ and store it in the internal list."
     (linphone-contacts-delete linphone-contacts-obsolete)
     (setq linphone-contacts-obsolete nil)))
 
-(defun linphone-contacts-add (name address)
-  "Add a new contact."
-  (interactive "sName: \nsAddress: ")
-  (unless (and name (string-match-p "\\w" name))
-    (error "Invalid contact name"))
-  (unless (and address (string-match-p "\\w" address))
-    (error "Invalid contact address"))
-  (linphone-command (format linphone-contacts-add-command-format name address))
-  (setq linphone-pending-actions (list 'linphone-contacts-refresh)))
-
 ;;}}}
 ;;{{{ Control widgets
 
 (defvar linphone-contacts-display-position nil
   "Display position of the contact list to return after modification.")
-
-(defun linphone-contacts-call-button (item)
-  "Button to call the item."
-  (widget-create 'push-button
-                 :tag "Call"
-                 :help-echo (concat "Make a call to " (aref item 1))
-                 :notify (lambda (button &rest ignore)
-                           (linphone-command (format linphone-contacts-call-command-format
-                                                     (widget-value button))))
-                 (aref item 0)))
 
 (defun linphone-contacts-edit-button (item)
   "Button to edit the item."
@@ -237,7 +145,7 @@ and store it in the internal list."
               (widget-insert "<" (aref item 2) ">")
               (when (and linphone-online (not linphone-call-active))
                 (widget-insert " ")
-                (linphone-contacts-call-button item))
+                (linphone-contacts-call-button (aref item 0) (aref item 1)))
               (widget-insert " ")
               (linphone-contacts-edit-button item)
               (widget-insert " ")
