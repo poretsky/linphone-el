@@ -1,3 +1,10 @@
+linphone-el (2.2precise1) precise; urgency=low
+
+  * Better parsing of the backend responses.
+  * More call failure messages recognized by default.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Tue, 26 Mar 2013 22:58:44 +0400
+
 linphone-el (2.1precise1) precise; urgency=low
 
   * Contacts recognition on incoming calls.
