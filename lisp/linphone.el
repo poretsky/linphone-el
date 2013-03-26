@@ -236,20 +236,18 @@ parameter to be replaced by actual gain value."
   :type 'regexp
   :group 'linphone-backend)
 
-(defcustom linphone-call-failure-pattern
-  "User is temporarily unavailable\
-\\|Not Acceptable Here\
-\\|Forbidden\
-\\|Could not reach destination\
-\\|Could not resolve this number\
-\\|Call failed\
-\\|Terminate current call first\
-\\|Request Timeout\
-\\|Call declined\
-\\|Internal Server Error\
-\\|Bad request"
-  "Regular expression that matches against call failure messages."
-  :type 'regexp
+(defcustom linphone-call-failure-patterns
+  '("User is \\(busy\\|temporarily unavailable\\)"
+    "Not Acceptable Here"
+    "Forbidden"
+    "Could not \\(reach destination\\|resolve this number\\)"
+    "Call \\(failed\\|declined\\)"
+    "Terminate current call first"
+    "Request Timeout"
+    "Internal Server Error"
+    "Bad request")
+  "Regular expressions that matches against call failure messages."
+  :type '(repeat regexp)
   :group 'linphone-backend)
 
 (defcustom linphone-call-termination-pattern "Call \\(terminat\\|end\\)ed\\|No active call"
@@ -400,8 +398,8 @@ panel should be updated after updating log or contact list info."
     (insert string)
     (while (re-search-backward linphone-prompt-pattern nil t)
       (replace-match "")
+      (goto-char (point-max))
       (setq linphone-backend-ready t))
-    (goto-char (point-max))
     (setq linphone-control-change nil)
     (when (re-search-backward (format linphone-registration-result-pattern
                                       (concat linphone-online-state-string
@@ -448,6 +446,8 @@ panel should be updated after updating log or contact list info."
         (linphone-play-sound linphone-offline-sound)
         (setq linphone-online nil
               linphone-control-change t)))
+     ((re-search-backward linphone-answer-mode-change-pattern nil t)
+      (message "%s" (match-string 0)) nil)
      ((and linphone-online
            (re-search-backward linphone-call-connection-pattern nil t))
       (linphone-unmute)
@@ -485,7 +485,13 @@ panel should be updated after updating log or contact list info."
             linphone-current-control 'linphone-outgoing-call-control
             linphone-control-change t))
      ((and linphone-online
-           (re-search-backward linphone-call-failure-pattern nil t))
+           (re-search-backward
+            (let ((pattern (car linphone-call-failure-patterns)))
+              (mapc (lambda (reason)
+                      (setq pattern (concat pattern "\\|" reason)))
+                    (cdr linphone-call-failure-patterns))
+              pattern)
+            nil t))
       (when linphone-call-active
         (linphone-mute))
       (linphone-play-sound linphone-hangup-sound)
@@ -495,8 +501,6 @@ panel should be updated after updating log or contact list info."
             linphone-call-active nil
             linphone-current-control 'linphone-notification
             linphone-control-change t))
-     ((re-search-backward linphone-answer-mode-change-pattern nil t)
-      (message "%s" (match-string 0)) nil)
      (t nil))
     (when linphone-backend-ready
       (goto-char (point-max))
