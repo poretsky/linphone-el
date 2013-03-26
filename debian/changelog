@@ -1,3 +1,10 @@
+linphone-el (2.2squeeze1) squeeze; urgency=low
+
+  * Better parsing of the backend responses.
+  * More call failure messages recognized by default.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Tue, 26 Mar 2013 23:01:49 +0400
+
 linphone-el (2.1squeeze1) squeeze; urgency=low
 
   * Contacts recognition on incoming calls.
