@@ -86,7 +86,7 @@ The number placeholder is to be replaced by the contact index."
   "Button to edit the item."
   (widget-create 'push-button
                  :tag "Edit"
-                 :help-echo (concat "Edit contact info for " (aref item 1))
+                 :help-echo (format "Edit contact info for %s" (aref item 1))
                  :notify (lambda (button &rest ignore)
                            (linphone-contacts-add
                             (read-string "Name: " (aref (widget-value button) 1))
@@ -101,7 +101,7 @@ The number placeholder is to be replaced by the contact index."
   "Button to delete the item."
   (widget-create 'push-button
                  :tag "Delete"
-                 :help-echo (concat "Delete contact info for " (aref item 1))
+                 :help-echo (format "Delete contact info for %s" (aref item 1))
                  :notify (lambda (button &rest ignore)
                            (linphone-contacts-delete (widget-value button))
                            (setq linphone-pending-actions (list 'linphone-contacts-refresh))
