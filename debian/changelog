@@ -1,3 +1,9 @@
+linphone-el (2.4precise1) precise; urgency=low
+
+  * Fixed log lists displaying.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Wed, 27 Mar 2013 23:35:00 +0400
+
 linphone-el (2.3precise1) precise; urgency=low
 
   * Fixed cursor positioning in the control panel when state changes.
