@@ -288,12 +288,12 @@ The string placeholder is to be replaced by a call type detector string."
 (defun linphone-log-missed-p (item)
   "Test if the item represents missed call."
   (and (string-equal (aref item 0) linphone-log-incoming-call-detector)
-       (string-equal (aref item 5) linphone-log-missed-call-detector)))
+       (string-equal (aref item 4) linphone-log-missed-call-detector)))
 
 (defun linphone-log-received-p (item)
   "Test if the item represents received call."
   (and (string-equal (aref item 0) linphone-log-incoming-call-detector)
-       (not (string-equal (aref item 5) linphone-log-missed-call-detector))))
+       (not (string-equal (aref item 4) linphone-log-missed-call-detector))))
 
 (defun linphone-log-dialed-p (item)
   "Test if the item represents dialed call."
