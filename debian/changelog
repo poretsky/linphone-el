@@ -1,3 +1,9 @@
+linphone-el (2.3precise1) precise; urgency=low
+
+  * Fixed cursor positioning in the control panel when state changes.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Wed, 27 Mar 2013 22:12:16 +0400
+
 linphone-el (2.2precise1) precise; urgency=low
 
   * Better parsing of the backend responses.
