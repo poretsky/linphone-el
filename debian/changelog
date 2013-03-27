@@ -1,3 +1,9 @@
+linphone-el (2.4squeeze1) squeeze; urgency=low
+
+  * Fixed log lists displaying.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Wed, 27 Mar 2013 23:38:25 +0400
+
 linphone-el (2.3squeeze1) squeeze; urgency=low
 
   * Fixed cursor positioning in the control panel when state changes.
