@@ -1,3 +1,9 @@
+linphone-el (2.3squeeze1) squeeze; urgency=low
+
+  * Fixed cursor positioning in the control panel when state changes.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Wed, 27 Mar 2013 22:15:46 +0400
+
 linphone-el (2.2squeeze1) squeeze; urgency=low
 
   * Better parsing of the backend responses.

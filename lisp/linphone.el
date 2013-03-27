@@ -400,7 +400,6 @@ panel should be updated after updating log or contact list info."
       (replace-match "")
       (goto-char (point-max))
       (setq linphone-backend-ready t))
-    (setq linphone-control-change nil)
     (when (re-search-backward (format linphone-registration-result-pattern
                                       (concat linphone-online-state-string
                                               "\\|" linphone-offline-state-pattern))
@@ -435,12 +434,14 @@ panel should be updated after updating log or contact list info."
       (when linphone-backend-ready
         (linphone-contacts-extract)
         (setq linphone-contacts-requested nil
-              linphone-control-change (linphone-list-display-update))))
+              linphone-control-change (or linphone-control-change
+                                          (linphone-list-display-update)))))
      (linphone-log-requested
       (when linphone-backend-ready
         (linphone-log-acquire)
         (setq linphone-log-requested nil
-              linphone-control-change (linphone-list-display-update))))
+              linphone-control-change (or linphone-control-change
+                                          (linphone-list-display-update)))))
      ((re-search-backward linphone-unreg-state-pattern nil t)
       (when linphone-online
         (linphone-play-sound linphone-offline-sound)
@@ -519,7 +520,8 @@ panel should be updated after updating log or contact list info."
                               (eq linphone-current-control 'linphone-general-control)))))
         (funcall linphone-current-control)
         (when position
-          (goto-char position))))))
+          (goto-char position))))
+    (setq linphone-control-change nil)))
 
 ;;}}}
 ;;{{{ Backend process control
