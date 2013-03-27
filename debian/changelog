@@ -1,3 +1,9 @@
+linphone-el (2.3lucid1) lucid; urgency=low
+
+  * Fixed cursor positioning in the control panel when state changes.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Wed, 27 Mar 2013 22:14:14 +0400
+
 linphone-el (2.2lucid1) lucid; urgency=low
 
   * Better parsing of the backend responses.
