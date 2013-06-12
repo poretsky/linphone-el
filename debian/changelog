@@ -1,3 +1,65 @@
+linphone-el (2.4wheezy1) wheezy; urgency=low
+
+  * Per distribution build.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Wed, 12 Jun 2013 21:37:17 +0400
+
+linphone-el (2.4precise1) precise; urgency=low
+
+  * Fixed log lists displaying.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Wed, 27 Mar 2013 23:35:00 +0400
+
+linphone-el (2.3precise1) precise; urgency=low
+
+  * Fixed cursor positioning in the control panel when state changes.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Wed, 27 Mar 2013 22:12:16 +0400
+
+linphone-el (2.2precise1) precise; urgency=low
+
+  * Better parsing of the backend responses.
+  * More call failure messages recognized by default.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Tue, 26 Mar 2013 22:58:44 +0400
+
+linphone-el (2.1precise1) precise; urgency=low
+
+  * Contacts recognition on incoming calls.
+  * Calls from log to the known contacts are made via the address book
+    functions, so that respective info is properly displayed.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Mon, 25 Mar 2013 22:23:19 +0400
+
+linphone-el (2.0precise1) precise; urgency=low
+
+  * Totally new version. A lot of fixes and enhancements.
+  * Implemented address book and recent calls log.
+  * Implemented auto answer mode.
+  * Implemented initial registration form.
+  * Customization enhancements.
+  * Improved background mode and implemented customizable autostart
+    option.
+  * Implemented microphone gain control.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Thu, 21 Mar 2013 22:59:12 +0400
+
+linphone-el (1.2.2precise1) precise; urgency=low
+
+  * Source directory is now not included into the load path, but
+    symlinks to the source files are preserved to make them available
+    from help view.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Tue, 30 Oct 2012 22:13:41 +0400
+
+linphone-el (1.2.1precise1) precise; urgency=low
+
+  * Per distribution build.
+  * Lintian complaints satisfied.
+  * Bumped standards version to 3.9.3.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Tue, 09 Oct 2012 06:02:16 +0400
+
 linphone-el (1.2) unstable; urgency=low
 
   * Source directory added to the load path to allow source access
