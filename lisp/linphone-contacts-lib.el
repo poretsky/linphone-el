@@ -49,6 +49,11 @@
   (require 'linphone-contacts-core))
 
 ;;}}}
+;;{{{ Forward declarations
+
+(declare-function linphone-command "linphone" (command))
+
+;;}}}
 ;;{{{ Customizations
 
 (defcustom linphone-contacts-call-command-format "friend call %d"

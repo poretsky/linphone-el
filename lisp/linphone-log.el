@@ -49,7 +49,15 @@
   (require 'linphone-contacts-core)
   (require 'linphone-contacts-lib))
 
-(autoload 'linphone-call "linphone-control")
+;;}}}
+;;{{{ Forward declarations
+
+(declare-function linphone-command "linphone" (command))
+(declare-function linphone-call "linphone-control" (addr))
+(declare-function linphone-contacts-refresh "linphone-contacts-core")
+(declare-function linphone-contacts-recognize "linphone-contacts-core" (info))
+(declare-function linphone-contacts-add "linphone-contacts-lib" (name address))
+(declare-function linphone-contacts-call-button "linphone-contacts-lib" (id name))
 
 ;;}}}
 ;;{{{ Customizations

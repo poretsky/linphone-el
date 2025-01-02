@@ -49,6 +49,13 @@
   (require 'linphone-contacts-lib))
 
 ;;}}}
+;;{{{ Forward declarations
+
+(declare-function linphone-command "linphone" (command))
+(declare-function linphone-contacts-add "linphone-contacts-lib" (name address))
+(declare-function linphone-contacts-call-button "linphone-contacts-lib" (id name))
+
+;;}}}
 ;;{{{ Customizations
 
 (defcustom linphone-contacts-delete-command-format "friend delete %d"

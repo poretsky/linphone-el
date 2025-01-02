@@ -67,25 +67,14 @@
 
 (require 'custom)
 
-(autoload 'linphone-general-control "linphone-display")
-(autoload 'linphone-schedule-log-update "linphone-display")
+;;}}}
+;;{{{ Forward declarations
 
-(autoload 'linphone-online-controls "linphone-control")
-(autoload 'linphone-incoming-call-control "linphone-control")
-(autoload 'linphone-outgoing-call-control "linphone-control")
-(autoload 'linphone-notification "linphone-control")
-
-(autoload 'linphone-active-call-control "linphone-conversation")
-
-(autoload 'linphone-contacts-refresh "linphone-contacts-core")
-(autoload 'linphone-contacts-extract "linphone-contacts-core")
-(autoload 'linphone-contacts-recognize "linphone-contacts-core")
-
-(autoload 'linphone-contacts-show "linphone-contacts")
-
-(autoload 'linphone-log-refresh "linphone-log")
-(autoload 'linphone-log-acquire "linphone-log")
-(autoload 'linphone-log-show "linphone-log")
+(declare-function linphone-contacts-extract "linphone-contacts-core")
+(declare-function linphone-contacts-recognize "linphone-contacts-core" (info))
+(declare-function linphone-log-acquire "linphone-log")
+(declare-function linphone-schedule-log-update "linphone-display")
+(declare-function linphone-general-control "linphone-display" (&optional show))
 
 ;;}}}
 ;;{{{ Customizations

@@ -48,6 +48,11 @@
   (require 'linphone))
 
 ;;}}}
+;;{{{ Forward declarations
+
+(declare-function linphone-command "linphone" (command))
+
+;;}}}
 ;;{{{ Customizations
 
 (defcustom linphone-contacts-get-command "friend list"

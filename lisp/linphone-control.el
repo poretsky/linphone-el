@@ -48,6 +48,14 @@
   (require 'linphone-display))
 
 ;;}}}
+;;{{{ Forward declarations
+
+(declare-function linphone-command "linphone" (command))
+(declare-function linphone-quit-button "linphone-display")
+(declare-function linphone-customize-button "linphone-display")
+(declare-function linphone-arrange-control-panel "linphone-display" (header))
+
+;;}}}
 ;;{{{ Customizations
 
 (defcustom linphone-call-command-format "call %s"

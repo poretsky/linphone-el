@@ -47,6 +47,14 @@
   (require 'linphone))
 
 ;;}}}
+;;{{{ Forward declarations
+
+(declare-function linphone-command "linphone" (command))
+(declare-function linphone-contacts-show "linphone-contacts")
+(declare-function linphone-log-show "linphone-log")
+(declare-function linphone-online-controls "linphone-control")
+
+;;}}}
 ;;{{{ Customizations
 
 (defcustom linphone-show-contacts nil

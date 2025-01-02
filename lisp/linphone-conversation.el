@@ -48,6 +48,15 @@
   (require 'linphone-control))
 
 ;;}}}
+;;{{{ Forward declarations
+
+(declare-function linphone-mute "linphone")
+(declare-function linphone-unmute "linphone")
+(declare-function linphone-arrange-control-panel "linphone-display" (header))
+(declare-function linphone-panel-footer "linphone-display")
+(declare-function linphone-cancel-button "linphone-control" (label))
+
+;;}}}
 ;;{{{ Control widgets
 
 (defun linphone-mute-button ()
