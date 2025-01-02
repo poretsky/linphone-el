@@ -38,13 +38,15 @@
 ;;}}}
 ;;{{{ Requirements
 
+(require 'cl-lib)
 (require 'custom)
 (require 'widget)
 (eval-when-compile
   (require 'wid-edit))
 
-(require 'linphone)
-(require 'linphone-contacts-core)
+(cl-eval-when (load)
+  (require 'linphone)
+  (require 'linphone-contacts-core))
 
 ;;}}}
 ;;{{{ Customizations

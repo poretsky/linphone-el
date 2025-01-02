@@ -37,12 +37,14 @@
 ;;}}}
 ;;{{{ Requirements
 
+(require 'cl-lib)
 (require 'custom)
 (require 'widget)
 (eval-when-compile
   (require 'wid-edit))
 
-(require 'linphone)
+(cl-eval-when (load)
+  (require 'linphone))
 
 ;;}}}
 ;;{{{ Customizations

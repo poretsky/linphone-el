@@ -37,13 +37,15 @@
 ;;}}}
 ;;{{{ Requirements
 
+(require 'cl-lib)
 (require 'widget)
 (eval-when-compile
   (require 'wid-edit))
 
-(require 'linphone)
-(require 'linphone-display)
-(require 'linphone-control)
+(cl-eval-when (load)
+  (require 'linphone)
+  (require 'linphone-display)
+  (require 'linphone-control))
 
 ;;}}}
 ;;{{{ Control widgets
