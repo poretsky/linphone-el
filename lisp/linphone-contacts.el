@@ -134,6 +134,7 @@ The number placeholder is to be replaced by the contact index."
 ;;}}}
 ;;{{{ Show contact list
 
+;;;###autoload
 (defun linphone-contacts-show ()
   "Make the address book view."
   (setq linphone-contacts-display-position (point))

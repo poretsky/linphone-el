@@ -82,6 +82,7 @@ The string placeholder is to be replaced by the actual target address."
 ;;}}}
 ;;{{{ Backend commands
 
+;;;###autoload
 (defun linphone-call (addr)
   "Arrange an outgoing call to specified address."
   (interactive "sAddress to call: ")
@@ -185,6 +186,7 @@ The string placeholder is to be replaced by the actual target address."
                            (funcall linphone-current-control))
                  "Ok"))
 
+;;;###autoload
 (defun linphone-online-controls ()
   "Make up general controls for online mode."
   (linphone-arrange-call-button)
@@ -199,6 +201,7 @@ The string placeholder is to be replaced by the actual target address."
   (widget-insert "\n    ")
   (linphone-unregister-button))
 
+;;;###autoload
 (defun linphone-incoming-call-control ()
   "Incoming call control panel popup."
   (linphone-arrange-control-panel linphone-backend-response)
@@ -211,6 +214,7 @@ The string placeholder is to be replaced by the actual target address."
     (widget-forward 1))
   (display-buffer linphone-control-panel))
 
+;;;###autoload
 (defun linphone-outgoing-call-control ()
   "Outgoing call control panel popup."
   (linphone-arrange-control-panel linphone-backend-response)
@@ -222,6 +226,7 @@ The string placeholder is to be replaced by the actual target address."
     (widget-forward 1))
   (pop-to-buffer linphone-control-panel))
 
+;;;###autoload
 (defun linphone-notification ()
   "Notification window popup."
   (linphone-arrange-control-panel linphone-backend-response)

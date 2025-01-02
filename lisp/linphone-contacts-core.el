@@ -76,6 +76,7 @@
 ;;}}}
 ;;{{{ Request data from the backend
 
+;;;###autoload
 (defun linphone-contacts-refresh ()
   "Refresh contacts info."
   (linphone-command linphone-contacts-get-command)
@@ -87,6 +88,7 @@
 (defvar linphone-contacts-list nil
   "Address book content.")
 
+;;;###autoload
 (defun linphone-contacts-extract ()
   "Parse backend supplied contacts info in current buffer
 and store it in the internal list."
@@ -114,6 +116,7 @@ and store it in the internal list."
 ;;}}}
 ;;{{{ Utility functions
 
+;;;###autoload
 (defun linphone-contacts-recognize (info)
   "Search names in the contact list by specified info.
 Returns vector in the format [id name address]

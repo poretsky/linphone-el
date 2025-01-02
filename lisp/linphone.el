@@ -560,6 +560,7 @@ panel should be updated after updating log or contact list info."
 ;;}}}
 ;;{{{ Interactive commands
 
+;;;###autoload
 (defun linphone (&optional show)
   "The main Linphone entry point.
 Start the backend program if necessary and popup control panel if

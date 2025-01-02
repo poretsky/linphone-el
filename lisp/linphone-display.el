@@ -84,6 +84,7 @@ proxy host name and your password."
         (funcall (cdr control))
       (add-to-list 'linphone-pending-actions (cdr control) 'append))))
 
+;;;###autoload
 (defun linphone-schedule-log-update ()
   "Schedule log update if it is visible."
   (let ((linphone-backend-ready nil))
@@ -207,6 +208,7 @@ Navigate around and press buttons.
     (linphone-log-show))
   (widget-insert "\n"))
 
+;;;###autoload
 (defun linphone-general-control (&optional show)
   "General control panel constructor. If optional argument is non-nil
 the constructed panel will be popped up."

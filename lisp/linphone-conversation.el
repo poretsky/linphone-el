@@ -70,6 +70,7 @@
                            (customize-option 'linphone-mic-gain))
                  "Gain"))
 
+;;;###autoload
 (defun linphone-active-call-control ()
   "Active call control panel popup."
   (linphone-arrange-control-panel (format "Talking with %s"

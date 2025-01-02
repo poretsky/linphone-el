@@ -151,6 +151,7 @@ The string placeholder is to be replaced by a call type detector string."
   (linphone-command linphone-log-get-command)
   (setq linphone-log-requested t))
 
+;;;###autoload
 (defun linphone-log-refresh ()
   "Refresh log info."
   (if linphone-contacts-loaded
@@ -179,6 +180,7 @@ The string placeholder is to be replaced by a call type detector string."
 (defvar linphone-log-all-calls (cons linphone-log-show-all-calls 0)
   "Visibility state and number of all calls in history.")
 
+;;;###autoload
 (defun linphone-log-acquire ()
   "Parse the log and fill out the call list."
   (setq linphone-log-call-list nil)
@@ -350,6 +352,7 @@ The string placeholder is to be replaced by a call type detector string."
             linphone-log-call-list)
       (widget-insert (format "\nShown %d of %d\n" count (cdr control))))))
 
+;;;###autoload
 (defun linphone-log-show ()
   "Insert call history into the current buffer."
   (if (null linphone-log-call-list)
