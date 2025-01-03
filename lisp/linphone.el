@@ -84,7 +84,8 @@
   (file-name-as-directory (expand-file-name "../sounds" (file-name-directory load-file-name)))
   "Directory where sound icons are stored.")
 
-(defgroup linphone nil
+;;;###autoload
+(defgroup linphone '((linphone-logs custom-group))
   "Internet telephone."
   :group 'applications)
 

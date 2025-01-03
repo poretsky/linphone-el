@@ -70,6 +70,7 @@
 ;;}}}
 ;;{{{ Customizations
 
+;;;###autoload
 (defgroup linphone-logs nil
   "Log viewing customization."
   :group 'linphone)
