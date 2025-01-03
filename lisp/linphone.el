@@ -65,6 +65,7 @@
 ;;}}}
 ;;{{{ Requirements
 
+(require 'cl-lib)
 (require 'custom)
 
 ;;}}}
@@ -126,6 +127,7 @@ if nil is specified, then the current level will be left untouched."
                  (integer :tag "Explicit value in percents"))
   :initialize 'custom-initialize-default
   :set (lambda (symbol value)
+         (cl-declare (special linphone-mic-tune-command))
          (when value
            (when (or (< value 0) (> value 100))
              (error "Linphone microphone gain value is out of range"))

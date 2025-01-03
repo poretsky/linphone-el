@@ -56,6 +56,10 @@
 (declare-function linphone-panel-footer "linphone-display")
 (declare-function linphone-cancel-button "linphone-control" (label))
 
+(defvar linphone-mic-muted)
+(defvar linphone-current-call)
+(defvar linphone-control-panel)
+
 ;;}}}
 ;;{{{ Control widgets
 

@@ -59,6 +59,14 @@
 (declare-function linphone-contacts-add "linphone-contacts-lib" (name address))
 (declare-function linphone-contacts-call-button "linphone-contacts-lib" (id name))
 
+(defvar linphone-log-requested)
+(defvar linphone-contacts-loaded)
+(defvar linphone-pending-actions)
+(defvar linphone-current-control)
+(defvar linphone-backend-ready)
+(defvar linphone-online)
+(defvar linphone-call-active)
+
 ;;}}}
 ;;{{{ Customizations
 

@@ -52,6 +52,9 @@
 
 (declare-function linphone-command "linphone" (command))
 
+(defvar linphone-contacts-requested)
+(defvar linphone-contacts-loaded)
+
 ;;}}}
 ;;{{{ Customizations
 

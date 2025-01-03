@@ -53,6 +53,8 @@
 
 (declare-function linphone-command "linphone" (command))
 
+(defvar linphone-pending-actions)
+
 ;;}}}
 ;;{{{ Customizations
 

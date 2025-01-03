@@ -45,7 +45,8 @@
 
 (cl-eval-when (load)
   (require 'linphone)
-  (require 'linphone-display))
+  (require 'linphone-display)
+  (require 'linphone-contacts-core))
 
 ;;}}}
 ;;{{{ Forward declarations
@@ -54,6 +55,15 @@
 (declare-function linphone-quit-button "linphone-display")
 (declare-function linphone-customize-button "linphone-display")
 (declare-function linphone-arrange-control-panel "linphone-display" (header))
+
+(defvar linphone-contacts-loaded)
+(defvar linphone-pending-actions)
+(defvar linphone-backend-ready)
+(defvar linphone-autoanswer)
+(defvar linphone-call-active)
+(defvar linphone-current-control)
+(defvar linphone-backend-response)
+(defvar linphone-control-panel)
 
 ;;}}}
 ;;{{{ Customizations
