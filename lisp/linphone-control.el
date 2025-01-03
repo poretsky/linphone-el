@@ -40,8 +40,7 @@
 (require 'cl-lib)
 (require 'custom)
 (require 'widget)
-(eval-when-compile
-  (require 'wid-edit))
+(require 'wid-edit)
 
 (cl-eval-when (load)
   (require 'linphone)
