@@ -9,21 +9,25 @@ utility is used for audio system tuning.
 
 ## Installation
 
-Place this archive in your home directory and include the following
-lines in your `~/.emacs` file:
+To make use of this package compile it with the command:
+
+```bash
+$ cd lisp ; make
+```
+
+And then add the following line to your Emacs startup file:
 
 ```elisp
-(add-to-list 'load-path "~/linphone-el/lisp")
-(autoload 'linphone "linphone" "Internet telephone" t)
+(load "path/to/this/directory/lisp/linphone-autoloads")
 ```
 
 
 ## Usage
 
 You can activate Linphone from within Emacs by typing
-`M-x linphone <RET>`. The control panel with several buttons will be
-popped up. At first you have to register your account by pressing
-`Register` button and providing the account data:
+`M-x linphone <RET>` or via main menu. The control panel with several
+buttons will be popped up. At first you have to register your account
+by pressing `Register` button and providing the account data:
 
 - your identity (full SIP address in the form user@some.host),
 - proxy host name if it differs from the one included in your identity,
