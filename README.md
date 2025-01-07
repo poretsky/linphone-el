@@ -3,8 +3,8 @@
 This is an Emacs interface to the well-known Linphone application. It
 uses console version of the Linphone as a backend. In major Linux
 distributions this console version is usually provided as
-`linphone-nox` or `linphone-nogtk` package. And also the `amixer`
-utility is used for audio system tuning.
+`linphone-nox`, `linphone-nogtk` or `linphone-cli` package. And also
+the `amixer` utility is used for audio system tuning.
 
 
 ## Installation
