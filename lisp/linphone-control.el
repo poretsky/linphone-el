@@ -67,6 +67,7 @@
 ;;}}}
 ;;{{{ Customizations
 
+;;;###autoload
 (defcustom linphone-call-command-format "call %s"
   "Linphone call command format.
 The string placeholder is to be replaced by the actual target address."
