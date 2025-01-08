@@ -63,6 +63,7 @@
 ;;}}}
 ;;{{{ Customizations
 
+;;;###autoload
 (defcustom linphone-contacts-delete-command-format "friend delete %d"
   "Format string to construct a contact delete command.
 The number placeholder is to be replaced by the contact index."

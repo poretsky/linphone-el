@@ -80,6 +80,7 @@ control panel. This option merely defines the state to start with."
   :type 'boolean
   :group 'linphone)
 
+;;;###autoload
 (defcustom linphone-register-command-format "register %s %s %s"
   "Linphone register command format.
 The string placeholders are to be replaced by your identity,
