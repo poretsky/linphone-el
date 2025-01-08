@@ -93,13 +93,13 @@
   "Sound icons for various events."
   :group 'linphone)
 
-(defgroup linphone-backend nil
+(defgroup linphone-backend
+  '((linphone-call-command-format custom-variable)
+    (linphone-log-get-command custom-variable)
+    (linphone-contacts-delete-command-format custom-variable)
+    (linphone-register-command-format custom-variable))
   "Communications with external backend programs.
 Don't touch this stuff unless you really know what you are doing."
-  :require 'linphone-control
-  :require 'linphone-log
-  :require 'linphone-contacts
-  :require 'linphone-display
   :group 'linphone)
 
 (defcustom linphone-autostart nil
