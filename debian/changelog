@@ -1,3 +1,10 @@
+linphone-el (3.1-0focal1) focal; urgency=medium
+
+  * New upstream release.
+  * Fixed loading.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Wed, 08 Jan 2025 20:17:28 +0300
+
 linphone-el (3.0-0focal1) focal; urgency=medium
 
   * Initial package release.
