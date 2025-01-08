@@ -1,0 +1,26 @@
+#! /bin/sh -e
+# /usr/lib/emacsen-common/packages/install/linphone-el
+
+FLAVOR=$1
+PACKAGE=linphone-el
+
+ELDIR=/usr/share/emacs/site-lisp/${PACKAGE}
+ELCDIR=/usr/share/${FLAVOR}/site-lisp/${PACKAGE}
+
+if [ ${FLAVOR} = emacs ]; then exit 0; fi
+
+echo install/${PACKAGE}: Handling install for emacsen flavor ${FLAVOR}
+
+install -m 755 -d ${ELCDIR}
+cd ${ELDIR}
+FILES=`echo *.el Makefile`
+cd ${ELCDIR}
+for file in $FILES
+do ln -s ../../../emacs/site-lisp/${PACKAGE}/$file
+done
+
+make -ks EMACS=${FLAVOR} > CompilationLog 2>&1
+rm -f Makefile make-loaddefs.el
+gzip -9 -f ${ELCDIR}/CompilationLog
+
+exit 0

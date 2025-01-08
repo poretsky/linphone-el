@@ -1,0 +1,5 @@
+linphone-el (3.0-0xenial1) xenial; urgency=medium
+
+  * Initial package release.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Wed, 08 Jan 2025 15:44:06 +0300
