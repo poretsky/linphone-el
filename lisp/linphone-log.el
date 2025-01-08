@@ -41,7 +41,6 @@
 (require 'custom)
 (require 'widget)
 (eval-when-compile
-  (require 'cl)
   (require 'wid-edit))
 
 (cl-eval-when (load)
@@ -236,12 +235,12 @@ The string placeholder is to be replaced by a call type detector string."
                                  (match-string 1)))))
         (cond
          ((string-equal type linphone-log-outgoing-call-detector)
-          (incf (cdr linphone-log-dialed-calls)))
+          (cl-incf (cdr linphone-log-dialed-calls)))
          ((string-equal type linphone-log-incoming-call-detector)
           (if (string-equal status linphone-log-missed-call-detector)
-              (incf (cdr linphone-log-missed-calls))
-            (incf (cdr linphone-log-received-calls))))
-         (t (incf (cdr linphone-log-unclassified-calls))))
+              (cl-incf (cdr linphone-log-missed-calls))
+            (cl-incf (cdr linphone-log-received-calls))))
+         (t (cl-incf (cdr linphone-log-unclassified-calls))))
         (goto-char item-start)
         (add-to-list 'linphone-log-call-list
                      (vector type date partner duration status)
