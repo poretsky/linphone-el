@@ -115,6 +115,7 @@ Zero or negative value means no restrictions."
   :type '(choice (const :tag "Unrestricted" nil) integer)
   :group 'linphone-logs)
 
+;;;###autoload
 (defcustom linphone-log-get-command "call-logs"
   "Linphone command to get log info."
   :type 'string
