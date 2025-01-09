@@ -115,52 +115,36 @@ Zero or negative value means no restrictions."
   :type '(choice (const :tag "Unrestricted" nil) integer)
   :group 'linphone-logs)
 
-;;;###autoload
-(defcustom linphone-log-get-command "call-logs"
-  "Linphone command to get log info."
-  :type 'string
-  :group 'linphone-backend)
+;;}}}
+;;{{{ Control data
 
-(defcustom linphone-log-incoming-call-detector "Incoming"
-  "Incoming call detector string for matching."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-log-get-command "call-logs"
+  "Linphone command to get log info.")
 
-(defcustom linphone-log-outgoing-call-detector "Outgoing"
-  "Outgoing call detector string for matching."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-log-incoming-call-detector "Incoming"
+  "Incoming call detector string for matching.")
 
-(defcustom linphone-log-missed-call-detector "missed"
-  "Outgoing call detector string for matching."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-log-outgoing-call-detector "Outgoing"
+  "Outgoing call detector string for matching.")
 
-(defcustom linphone-log-call-info-header-format "^\\(%s\\) call at \\(.*\\)$"
+(defconst linphone-log-missed-call-detector "missed"
+  "Outgoing call detector string for matching.")
+
+(defconst linphone-log-call-info-header-format "^\\(%s\\) call at \\(.*\\)$"
   "Regular expression pattern for call info block header matching.
-The string placeholder is to be replaced by a call type detector string."
-  :type 'string
-  :group 'linphone-backend)
+The string placeholder is to be replaced by a call type detector string.")
 
-(defcustom linphone-log-call-issuer-retriever "^From: \\(.*\\)$"
-  "Regular expression to retrieve and parse call issuer info."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-log-call-issuer-retriever "^From: \\(.*\\)$"
+  "Regular expression to retrieve and parse call issuer info.")
 
-(defcustom linphone-log-call-target-retriever "^To: \\(.*\\)$"
-  "Regular expression to retrieve and parse call target info."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-log-call-target-retriever "^To: \\(.*\\)$"
+  "Regular expression to retrieve and parse call target info.")
 
-(defcustom linphone-log-call-duration-retriever "^Duration: \\(.*\\)$"
-  "Regular expression to retrieve and parse call duration info."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-log-call-duration-retriever "^Duration: \\(.*\\)$"
+  "Regular expression to retrieve and parse call duration info.")
 
-(defcustom linphone-log-call-status-retriever "^Status: \\(.*\\)$"
-  "Regular expression to retrieve and parse call status info."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-log-call-status-retriever "^Status: \\(.*\\)$"
+  "Regular expression to retrieve and parse call status info.")
 
 ;;}}}
 ;;{{{ Utilities

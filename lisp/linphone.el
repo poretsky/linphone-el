@@ -93,11 +93,7 @@
   "Sound icons for various events."
   :group 'linphone)
 
-(defgroup linphone-backend
-  '((linphone-call-command-format custom-variable)
-    (linphone-log-get-command custom-variable)
-    (linphone-contacts-delete-command-format custom-variable)
-    (linphone-register-command-format custom-variable))
+(defgroup linphone-backend nil
   "Communications with external backend programs.
 Don't touch this stuff unless you really know what you are doing."
   :group 'linphone)
@@ -202,37 +198,28 @@ parameter to be replaced by actual gain value."
   :type 'string
   :group 'linphone-backend)
 
-(defcustom linphone-autoanswer-enable-command "autoanswer enable"
-  "The command string to turn autoanswer mode on."
-  :type 'string
-  :group 'linphone-backend)
+;;}}}
+;;{{{ Control data
 
-(defcustom linphone-quit-command "quit"
-  "Linphone quit command string."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-autoanswer-enable-command "autoanswer enable"
+  "The command string to turn autoanswer mode on.")
 
-(defcustom linphone-prompt-pattern "^linphonec> "
-  "Regular expression that matches against Linphone backend prompt."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-quit-command "quit"
+  "Linphone quit command string.")
 
-(defcustom linphone-call-request-pattern "^\\(.*\\) is contacting you"
-  "Regular expression that matches against incoming call request."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-prompt-pattern "^linphonec> "
+  "Regular expression that matches against Linphone backend prompt.")
 
-(defcustom linphone-call-progress-pattern "^Contacting \\(.*\\)$"
-  "Regular expression that matches progress notification message."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-call-request-pattern "^\\(.*\\) is contacting you"
+  "Regular expression that matches against incoming call request.")
 
-(defcustom linphone-call-connection-pattern "Connected\\.$"
-  "Regular expression that matches against connection acknowledge."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-call-progress-pattern "^Contacting \\(.*\\)$"
+  "Regular expression that matches progress notification message.")
 
-(defcustom linphone-call-failure-patterns
+(defconst linphone-call-connection-pattern "Connected\\.$"
+  "Regular expression that matches against connection acknowledge.")
+
+(defconst linphone-call-failure-patterns
   '("User is \\(busy\\|temporarily unavailable\\)"
     "Not Acceptable Here"
     "Forbidden"
@@ -242,46 +229,30 @@ parameter to be replaced by actual gain value."
     "Request Timeout"
     "Internal Server Error"
     "Bad request")
-  "Regular expressions that matches against call failure messages."
-  :type '(repeat regexp)
-  :group 'linphone-backend)
+  "Regular expressions that matches against call failure messages.")
 
-(defcustom linphone-call-termination-pattern "Call \\(terminat\\|end\\)ed\\|No active call"
-  "Regular expression that matches against call termination message."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-call-termination-pattern "Call \\(terminat\\|end\\)ed\\|No active call"
+  "Regular expression that matches against call termination message.")
 
-(defcustom linphone-missed-call-pattern "^You have missed [0-9]+ calls?"
-  "Regular expression that matches against missed call message."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-missed-call-pattern "^You have missed [0-9]+ calls?"
+  "Regular expression that matches against missed call message.")
 
-(defcustom linphone-online-state-string "successful"
-  "Online status indication string."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-online-state-string "successful"
+  "Online status indication string.")
 
-(defcustom linphone-offline-state-pattern "failed"
-  "Regular expression that matches against offline indication strings."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-offline-state-pattern "failed"
+  "Regular expression that matches against offline indication strings.")
 
-(defcustom linphone-registration-result-pattern "Registration on \\(.*\\) \\(%s\\)"
+(defconst linphone-registration-result-pattern "Registration on \\(.*\\) \\(%s\\)"
   "Regular expression pattern that matches against registration result
 messages. The string placeholder is to be replaced by the status
-matching regexp constructed from the online and offline patterns."
-  :type 'string
-  :group 'linphone-backend)
+matching regexp constructed from the online and offline patterns.")
 
-(defcustom linphone-unreg-state-pattern "registered=-?[0-9]+"
-  "Regexp matching no registration status message."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-unreg-state-pattern "registered=-?[0-9]+"
+  "Regexp matching no registration status message.")
 
-(defcustom linphone-answer-mode-change-pattern "Auto answer \\(en\\|dis\\)abled"
-  "Regexp matching answer mode change messages."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-answer-mode-change-pattern "Auto answer \\(en\\|dis\\)abled"
+  "Regexp matching answer mode change messages.")
 
 ;;}}}
 ;;{{{ Utilities

@@ -80,13 +80,13 @@ control panel. This option merely defines the state to start with."
   :type 'boolean
   :group 'linphone)
 
-;;;###autoload
-(defcustom linphone-register-command-format "register %s %s %s"
+;;}}}
+;;{{{ Control data
+
+(defconst linphone-register-command-format "register %s %s %s"
   "Linphone register command format.
 The string placeholders are to be replaced by your identity,
-proxy host name and your password."
-  :type 'string
-  :group 'linphone-backend)
+proxy host name and your password.")
 
 ;;}}}
 ;;{{{ Utilities

@@ -39,7 +39,6 @@
 ;;{{{ Requirements
 
 (require 'cl-lib)
-(require 'custom)
 (require 'widget)
 (eval-when-compile
   (require 'wid-edit))
@@ -56,20 +55,16 @@
 (defvar linphone-pending-actions)
 
 ;;}}}
-;;{{{ Customizations
+;;{{{ Control data
 
-(defcustom linphone-contacts-call-command-format "friend call %d"
+(defconst linphone-contacts-call-command-format "friend call %d"
   "Format string to construct a contact call command.
-The number placeholder is to be replaced by the contact index."
-  :type 'string
-  :group 'linphone-backend)
+The number placeholder is to be replaced by the contact index.")
 
-(defcustom linphone-contacts-add-command-format "friend add \"%s\" %s"
+(defconst linphone-contacts-add-command-format "friend add \"%s\" %s"
   "Format string to construct a contact add command.
 String placeholders are to be replaced by the name and address
-of a new contact."
-  :type 'string
-  :group 'linphone-backend)
+of a new contact.")
 
 ;;}}}
 ;;{{{ Utility functions

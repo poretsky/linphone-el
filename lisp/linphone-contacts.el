@@ -38,7 +38,6 @@
 ;;{{{ Requirements
 
 (require 'cl-lib)
-(require 'custom)
 (require 'widget)
 (eval-when-compile
   (require 'wid-edit))
@@ -61,19 +60,14 @@
 (defvar linphone-call-active)
 
 ;;}}}
-;;{{{ Customizations
+;;{{{ Control data
 
-;;;###autoload
-(defcustom linphone-contacts-delete-command-format "friend delete %d"
+(defconst linphone-contacts-delete-command-format "friend delete %d"
   "Format string to construct a contact delete command.
-The number placeholder is to be replaced by the contact index."
-  :type 'string
-  :group 'linphone-backend)
+The number placeholder is to be replaced by the contact index.")
 
-(defcustom linphone-contacts-clear-command "friend delete all"
-  "Command string to clear all contacts info."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-contacts-clear-command "friend delete all"
+  "Command string to clear all contacts info.")
 
 ;;}}}
 ;;{{{ Utility functions

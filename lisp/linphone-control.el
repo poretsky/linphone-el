@@ -38,7 +38,6 @@
 ;;{{{ Requirements
 
 (require 'cl-lib)
-(require 'custom)
 (require 'widget)
 (require 'wid-edit)
 
@@ -65,39 +64,26 @@
 (defvar linphone-control-panel)
 
 ;;}}}
-;;{{{ Customizations
+;;{{{ Control data
 
-;;;###autoload
-(defcustom linphone-call-command-format "call %s"
+(defconst linphone-call-command-format "call %s"
   "Linphone call command format.
-The string placeholder is to be replaced by the actual target address."
-  :type 'string
-  :group 'linphone-backend)
+The string placeholder is to be replaced by the actual target address.")
 
-(defcustom linphone-answer-command "answer"
-  "Linphone answer incoming call command string."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-answer-command "answer"
+  "Linphone answer incoming call command string.")
 
-(defcustom linphone-cancel-command "terminate"
-  "Linphone current call cancellation command string."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-cancel-command "terminate"
+  "Linphone current call cancellation command string.")
 
-(defcustom linphone-unregister-command "unregister"
-  "Command to cancel registration."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-unregister-command "unregister"
+  "Command to cancel registration.")
 
-(defcustom linphone-check-registration-command "status register"
-  "Command to check registration status."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-check-registration-command "status register"
+  "Command to check registration status.")
 
-(defcustom linphone-autoanswer-disable-command "autoanswer disable"
-  "The command string to turn autoanswer mode off."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-autoanswer-disable-command "autoanswer disable"
+  "The command string to turn autoanswer mode off.")
 
 ;;}}}
 ;;{{{ Backend commands
