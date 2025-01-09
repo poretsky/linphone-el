@@ -66,6 +66,7 @@
 ;;}}}
 ;;{{{ Customizations
 
+;;;###autoload
 (defcustom linphone-show-contacts nil
   "Show address book content on startup.
 In fact, address book visibility can be toggled at any time from the

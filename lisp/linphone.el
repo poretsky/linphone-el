@@ -85,7 +85,9 @@
   "Directory where sound icons are stored.")
 
 ;;;###autoload
-(defgroup linphone '((linphone-logs custom-group))
+(defgroup linphone
+  '((linphone-show-contacts custom-variable)
+    (linphone-logs custom-group))
   "Internet telephone."
   :group 'applications)
 
