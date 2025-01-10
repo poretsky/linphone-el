@@ -39,9 +39,6 @@
 ;;{{{ Requirements
 
 (require 'cl-lib)
-(require 'widget)
-(eval-when-compile
-  (require 'wid-edit))
 
 (cl-eval-when (load)
   (require 'linphone))
