@@ -37,31 +37,11 @@
 ;;}}}
 ;;{{{ Requirements
 
-(require 'cl-lib)
 (require 'custom)
 (require 'widget)
 (require 'wid-edit)
 
-(cl-eval-when (load)
-  (require 'linphone))
-
-;;}}}
-;;{{{ Forward declarations
-
-(declare-function linphone-command "linphone" (command))
-(declare-function linphone-contacts-show "linphone-contacts")
-(declare-function linphone-log-show "linphone-log")
-(declare-function linphone-online-controls "linphone-control")
-
-(defvar linphone-backend-ready)
-(defvar linphone-pending-actions)
-(defvar linphone-backend-quit-command)
-(defvar linphone-quit-command)
-(defvar linphone-process)
-(defvar linphone-current-control)
-(defvar linphone-displayed-control)
-(defvar linphone-control-panel)
-(defvar linphone-online)
+(require 'linphone)
 
 ;;}}}
 ;;{{{ Customizations

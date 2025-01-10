@@ -37,27 +37,13 @@
 ;;}}}
 ;;{{{ Requirements
 
-(require 'cl-lib)
 (require 'widget)
 (eval-when-compile
   (require 'wid-edit))
 
-(cl-eval-when (load)
-  (require 'linphone)
-  (require 'linphone-contacts-core)
-  (require 'linphone-contacts-lib))
-
-;;}}}
-;;{{{ Forward declarations
-
-(declare-function linphone-command "linphone" (command))
-(declare-function linphone-contacts-add "linphone-contacts-lib" (name address))
-(declare-function linphone-contacts-call-button "linphone-contacts-lib" (id name))
-
-(defvar linphone-pending-actions)
-(defvar linphone-contacts-list)
-(defvar linphone-online)
-(defvar linphone-call-active)
+(require 'linphone)
+(require 'linphone-contacts-core)
+(require 'linphone-contacts-lib)
 
 ;;}}}
 ;;{{{ Control data

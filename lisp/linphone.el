@@ -69,15 +69,6 @@
 (require 'custom)
 
 ;;}}}
-;;{{{ Forward declarations
-
-(declare-function linphone-contacts-extract "linphone-contacts-core")
-(declare-function linphone-contacts-recognize "linphone-contacts-core" (info))
-(declare-function linphone-log-acquire "linphone-log")
-(declare-function linphone-schedule-log-update "linphone-display")
-(declare-function linphone-general-control "linphone-display" (&optional show))
-
-;;}}}
 ;;{{{ Customizations
 
 (defvar linphone-sounds-directory

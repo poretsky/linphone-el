@@ -43,28 +43,8 @@
 (eval-when-compile
   (require 'wid-edit))
 
-(cl-eval-when (load)
-  (require 'linphone)
-  (require 'linphone-contacts-core)
-  (require 'linphone-contacts-lib))
-
-;;}}}
-;;{{{ Forward declarations
-
-(declare-function linphone-command "linphone" (command))
-(declare-function linphone-call "linphone-control" (addr))
-(declare-function linphone-contacts-refresh "linphone-contacts-core")
-(declare-function linphone-contacts-recognize "linphone-contacts-core" (info))
-(declare-function linphone-contacts-add "linphone-contacts-lib" (name address))
-(declare-function linphone-contacts-call-button "linphone-contacts-lib" (id name))
-
-(defvar linphone-log-requested)
-(defvar linphone-contacts-loaded)
-(defvar linphone-pending-actions)
-(defvar linphone-current-control)
-(defvar linphone-backend-ready)
-(defvar linphone-online)
-(defvar linphone-call-active)
+(require 'linphone)
+(require 'linphone-contacts-lib)
 
 ;;}}}
 ;;{{{ Customizations

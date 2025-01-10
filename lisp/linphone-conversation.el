@@ -37,27 +37,12 @@
 ;;}}}
 ;;{{{ Requirements
 
-(require 'cl-lib)
 (require 'widget)
 (require 'wid-edit)
 
-(cl-eval-when (load)
-  (require 'linphone)
-  (require 'linphone-display)
-  (require 'linphone-control))
-
-;;}}}
-;;{{{ Forward declarations
-
-(declare-function linphone-mute "linphone")
-(declare-function linphone-unmute "linphone")
-(declare-function linphone-arrange-control-panel "linphone-display" (header))
-(declare-function linphone-panel-footer "linphone-display")
-(declare-function linphone-cancel-button "linphone-control" (label))
-
-(defvar linphone-mic-muted)
-(defvar linphone-current-call)
-(defvar linphone-control-panel)
+(require 'linphone)
+(require 'linphone-display)
+(require 'linphone-control)
 
 ;;}}}
 ;;{{{ Control widgets

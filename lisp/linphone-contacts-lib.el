@@ -38,21 +38,11 @@
 ;;}}}
 ;;{{{ Requirements
 
-(require 'cl-lib)
 (require 'widget)
 (eval-when-compile
   (require 'wid-edit))
 
-(cl-eval-when (load)
-  (require 'linphone)
-  (require 'linphone-contacts-core))
-
-;;}}}
-;;{{{ Forward declarations
-
-(declare-function linphone-command "linphone" (command))
-
-(defvar linphone-pending-actions)
+(require 'linphone)
 
 ;;}}}
 ;;{{{ Control data

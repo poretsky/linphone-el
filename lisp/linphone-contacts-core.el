@@ -38,18 +38,7 @@
 ;;}}}
 ;;{{{ Requirements
 
-(require 'cl-lib)
-
-(cl-eval-when (load)
-  (require 'linphone))
-
-;;}}}
-;;{{{ Forward declarations
-
-(declare-function linphone-command "linphone" (command))
-
-(defvar linphone-contacts-requested)
-(defvar linphone-contacts-loaded)
+(require 'linphone)
 
 ;;}}}
 ;;{{{ Control data
