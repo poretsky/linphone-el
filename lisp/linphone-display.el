@@ -72,6 +72,9 @@ proxy host name and your password.")
 ;;}}}
 ;;{{{ Utilities
 
+(defvar linphone-display-codecs (cons nil 'linphone-codecs-list-refresh)
+  "Linphone log visibility control.")
+
 (defvar linphone-display-contacts (cons linphone-show-contacts 'linphone-contacts-refresh)
   "Linphone log visibility control.")
 
@@ -228,7 +231,11 @@ the constructed panel will be popped up."
       (linphone-quit-button)
       (widget-insert "    ")
       (linphone-customize-button))
+    (widget-insert "\n\n")
+    (linphone-toggle-list-visibility-button linphone-display-codecs "Audio codecs")
     (widget-insert "\n")
+    (when (car linphone-display-codecs)
+      (linphone-codecs-show))
     (linphone-panel-footer)
     (widget-setup)
     (widget-forward 1))

@@ -247,6 +247,9 @@ matching regexp constructed from the online and offline patterns.")
 (defconst linphone-answer-mode-change-pattern "Auto answer \\(?:en\\|dis\\)abled"
   "Regexp matching answer mode change messages.")
 
+(defconst linphone-codec-status-change-pattern "^ *[0-9]+: \\(.+\\) \\(\\(?:en\\|dis\\)abled\\)$"
+  "Regexp matching codec status change messages.")
+
 ;;}}}
 ;;{{{ Utilities
 
@@ -286,6 +289,9 @@ matching regexp constructed from the online and offline patterns.")
 
 (defvar linphone-contacts-requested nil
   "Indicates that contact list was requested.")
+
+(defvar linphone-codecs-list-requested nil
+  "Indicates that codecs list was requested.")
 
 (defvar linphone-autoanswer nil
   "Indicates automatic answer mode.")
@@ -402,6 +408,12 @@ panel should be updated after updating log or contact list info."
         (setq linphone-log-requested nil
               linphone-control-change (or linphone-control-change
                                           (linphone-list-display-update)))))
+     (linphone-codecs-list-requested
+      (when linphone-backend-ready
+        (linphone-codecs-list-extract)
+        (setq linphone-codecs-list-requested nil
+              linphone-control-change (or linphone-control-change
+                                          (linphone-list-display-update)))))
      ((re-search-backward linphone-unreg-state-pattern nil t)
       (when linphone-online
         (linphone-play-sound linphone-offline-sound)
@@ -409,6 +421,8 @@ panel should be updated after updating log or contact list info."
               linphone-control-change t)))
      ((re-search-backward linphone-answer-mode-change-pattern nil t)
       (message "%s" (match-string 0)))
+     ((re-search-backward linphone-codec-status-change-pattern nil t)
+      (message "The %s audio codec is %s" (match-string 1) (match-string 2)))
      ((and linphone-online
            (re-search-backward linphone-call-connection-pattern nil t))
       (linphone-unmute)
@@ -509,6 +523,7 @@ panel should be updated after updating log or contact list info."
     (setq linphone-backend-ready nil
           linphone-online nil
           linphone-call-active nil
+          linphone-codecs-list-requested nil
           linphone-contacts-requested nil
           linphone-log-requested nil
           linphone-autoanswer linphone-answer-mode
