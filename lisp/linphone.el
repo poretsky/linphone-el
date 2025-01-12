@@ -244,7 +244,7 @@ matching regexp constructed from the online and offline patterns.")
 (defconst linphone-unreg-state-pattern "registered=-?[0-9]+"
   "Regexp matching no registration status message.")
 
-(defconst linphone-answer-mode-change-pattern "Auto answer \\(en\\|dis\\)abled"
+(defconst linphone-answer-mode-change-pattern "Auto answer \\(?:en\\|dis\\)abled"
   "Regexp matching answer mode change messages.")
 
 ;;}}}
