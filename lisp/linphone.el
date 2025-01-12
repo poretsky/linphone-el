@@ -408,7 +408,7 @@ panel should be updated after updating log or contact list info."
         (setq linphone-online nil
               linphone-control-change t)))
      ((re-search-backward linphone-answer-mode-change-pattern nil t)
-      (message "%s" (match-string 0)) nil)
+      (message "%s" (match-string 0)))
      ((and linphone-online
            (re-search-backward linphone-call-connection-pattern nil t))
       (linphone-unmute)
