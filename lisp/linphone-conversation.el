@@ -53,6 +53,10 @@
 (defconst linphone-unmute-command "unmute"
   "Linphone microphone unmute command.")
 
+(defconst linphone-transfer-command-format "transfer %s"
+  "Linphone transfer command format.
+The string placeholder is to be replaced by the actual target address.")
+
 ;;}}}
 ;;{{{ Control widgets
 
@@ -79,14 +83,26 @@
                            (customize-option 'linphone-mic-gain))
                  "Gain"))
 
+(defun linphone-transfer-call-button ()
+  "Button to transfer current call."
+  (widget-create 'push-button
+                 :tag "Transfer this call"
+                 :help-echo "Transfer current call to another subscriber"
+                 :notify (lambda (&rest ignore)
+                           (linphone-command
+                            (format linphone-transfer-command-format
+                                    (read-string "Address to transfer to: "))))
+                 "Transfer this call"))
+
 ;;;###autoload
 (defun linphone-active-call-control ()
   "Active call control panel popup."
   (linphone-arrange-control-panel (format "Talking with %s"
                                           linphone-current-call))
   (with-current-buffer linphone-control-panel
-    (widget-insert "            ")
     (linphone-cancel-button "Hang up")
+    (widget-insert "   ")
+    (linphone-transfer-call-button)
     (widget-insert "\n")
     (linphone-mute-button)
     (widget-insert "  ")
