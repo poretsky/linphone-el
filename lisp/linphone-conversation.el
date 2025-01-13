@@ -45,6 +45,15 @@
 (require 'linphone-control)
 
 ;;}}}
+;;{{{ Control data
+
+(defconst linphone-mute-command "mute"
+  "Linphone microphone mute command.")
+
+(defconst linphone-unmute-command "unmute"
+  "Linphone microphone unmute command.")
+
+;;}}}
 ;;{{{ Control widgets
 
 (defun linphone-mute-button ()
@@ -56,9 +65,10 @@
                  :off "Unmute"
                  :format "%t: %[[%v]%]"
                  :notify (lambda (widget &rest ignore)
-                           (if (widget-value widget)
-                               (linphone-unmute)
-                             (linphone-mute)))))
+                           (linphone-command
+                            (if (setq linphone-mic-muted (not (widget-value widget)))
+                                linphone-mute-command
+                              linphone-unmute-command)))))
 
 (defun linphone-mic-control-button ()
   "Button to adjust microphone gain."

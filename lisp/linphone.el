@@ -116,16 +116,21 @@ at any time. This option only defines the state to start with."
 (defcustom linphone-mic-gain nil
   "Microphone gain level in percents.
 The value must be in the range 0 through 100 inclusively.
-if nil is specified, then the current level will be left untouched."
+if nil is specified, then microphone settings will be left untouched.
+Any other non-numeric value means that microphone will be unmuted,
+but its gain level left unchanged."
   :type '(choice (const :tag "Untouched" nil)
+                 (const :tag "Only unmuted" t)
                  (integer :tag "Explicit value in percents"))
   :initialize 'custom-initialize-default
   :set (lambda (symbol value)
-         (cl-declare (special linphone-mic-tune-command))
-         (when value
+         (cl-declare (special linphone-mic-tune-command
+                              linphone-call-active))
+         (when (numberp value)
            (when (or (< value 0) (> value 100))
              (error "Linphone microphone gain value is out of range"))
-           (call-process-shell-command (format linphone-mic-tune-command value)))
+           (when linphone-call-active
+             (call-process-shell-command (format linphone-mic-tune-command value))))
          (custom-set-default symbol value))
   :set-after '(linphone-mic-tune-command)
   :group 'linphone)
@@ -174,12 +179,7 @@ It can help when the native one doesn't do the work properly."
   :type '(repeat string)
   :group 'linphone-backend)
 
-(defcustom linphone-mute-command "amixer set Capture,0 nocap"
-  "Shell command that effectively mutes microphone."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-unmute-command "amixer set Capture,0 cap"
+(defcustom linphone-mic-unmute-command "amixer set Capture,0 cap"
   "Shell command that effectively unmutes microphone."
   :type 'string
   :group 'linphone-backend)
@@ -255,18 +255,6 @@ matching regexp constructed from the online and offline patterns.")
 
 (defvar linphone-mic-muted nil
   "Indicates that the microphone is muted.")
-
-(defun linphone-mute ()
-  "Mute microphone."
-  (setq linphone-mic-muted t)
-  (call-process-shell-command linphone-mute-command))
-
-(defun linphone-unmute ()
-  "Unmute microphone."
-  (setq linphone-mic-muted nil)
-  (when (numberp linphone-mic-gain)
-    (call-process-shell-command (format linphone-mic-tune-command linphone-mic-gain)))
-  (call-process-shell-command linphone-unmute-command))
 
 (defun linphone-play-sound (icon)
   "Play a sound icon."
@@ -383,7 +371,6 @@ panel should be updated after updating log or contact list info."
               (add-to-list 'linphone-pending-actions 'linphone-contacts-refresh 'append)))
         (when linphone-online
           (when linphone-call-active
-            (linphone-mute)
             (linphone-play-sound linphone-hangup-sound))
           (unless (eq linphone-current-control 'linphone-notification)
             (setq linphone-current-control 'linphone-general-control))
@@ -425,14 +412,16 @@ panel should be updated after updating log or contact list info."
       (message "The %s audio codec is %s" (match-string 1) (match-string 2)))
      ((and linphone-online
            (re-search-backward linphone-call-connection-pattern nil t))
-      (linphone-unmute)
+      (when linphone-mic-gain
+        (when (numberp linphone-mic-gain)
+          (call-process-shell-command (format linphone-mic-tune-command linphone-mic-gain)))
+        (call-process-shell-command linphone-mic-unmute-command))
       (setq linphone-call-active t
+            linphone-mic-muted nil
             linphone-current-control 'linphone-active-call-control
             linphone-control-change t))
      ((and linphone-online
            (re-search-backward linphone-call-termination-pattern nil t))
-      (when linphone-call-active
-        (linphone-mute))
       (linphone-play-sound linphone-hangup-sound)
       (when (get-buffer linphone-control-panel)
         (linphone-schedule-log-update))
@@ -467,8 +456,6 @@ panel should be updated after updating log or contact list info."
                     (cdr linphone-call-failure-patterns))
               pattern)
             nil t))
-      (when linphone-call-active
-        (linphone-mute))
       (linphone-play-sound linphone-hangup-sound)
       (when (get-buffer linphone-control-panel)
         (linphone-schedule-log-update))
