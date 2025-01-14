@@ -38,50 +38,25 @@
 ;;}}}
 ;;{{{ Requirements
 
-(require 'cl-lib)
-(require 'custom)
-(require 'widget)
-(eval-when-compile
-  (require 'wid-edit))
-
-(cl-eval-when (load)
-  (require 'linphone))
+(require 'linphone)
 
 ;;}}}
-;;{{{ Forward declarations
+;;{{{ Control data
 
-(declare-function linphone-command "linphone" (command))
+(defconst linphone-contacts-get-command "friend list"
+  "Linphone command to get contact list.")
 
-(defvar linphone-contacts-requested)
-(defvar linphone-contacts-loaded)
+(defconst linphone-contacts-item-extractor "^\\*+ Friend \\([0-9]+\\) \\*+$"
+  "Regular expression to parse item header in the backend supplied list.")
 
-;;}}}
-;;{{{ Customizations
+(defconst linphone-contacts-name-extractor "^name: \\(.*\\)$"
+  "Regular expression to extract name info from the backend supplied list.")
 
-(defcustom linphone-contacts-get-command "friend list"
-  "Linphone command to get contact list."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-contacts-address-extractor "^address: <\\(.*\\)>$"
+  "Regular expression to extract address info from the backend supplied list.")
 
-(defcustom linphone-contacts-item-extractor "^\\*+ Friend \\([0-9]+\\) \\*+$"
-  "Regular expression to parse item header in the backend supplied list."
-  :type 'regexp
-  :group 'linphone-backend)
-
-(defcustom linphone-contacts-name-extractor "^name: \\(.*\\)$"
-  "Regular expression to extract name info from the backend supplied list."
-  :type 'regexp
-  :group 'linphone-backend)
-
-(defcustom linphone-contacts-address-extractor "^address: <\\(.*\\)>$"
-  "Regular expression to extract address info from the backend supplied list."
-  :type 'regexp
-  :group 'linphone-backend)
-
-(defcustom linphone-contacts-info-parser "\\(\"\\(.*\\)\" \\)?<\\(.*\\)>"
-  "Regular expression to parse caller id."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-contacts-info-parser "\\(\"\\(.*\\)\" \\)?<\\(.*\\)>"
+  "Regular expression to parse caller id.")
 
 ;;}}}
 ;;{{{ Request data from the backend
