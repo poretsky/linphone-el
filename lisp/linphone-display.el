@@ -37,35 +37,16 @@
 ;;}}}
 ;;{{{ Requirements
 
-(require 'cl-lib)
 (require 'custom)
 (require 'widget)
 (require 'wid-edit)
 
-(cl-eval-when (load)
-  (require 'linphone))
-
-;;}}}
-;;{{{ Forward declarations
-
-(declare-function linphone-command "linphone" (command))
-(declare-function linphone-contacts-show "linphone-contacts")
-(declare-function linphone-log-show "linphone-log")
-(declare-function linphone-online-controls "linphone-control")
-
-(defvar linphone-backend-ready)
-(defvar linphone-pending-actions)
-(defvar linphone-backend-quit-command)
-(defvar linphone-quit-command)
-(defvar linphone-process)
-(defvar linphone-current-control)
-(defvar linphone-displayed-control)
-(defvar linphone-control-panel)
-(defvar linphone-online)
+(require 'linphone)
 
 ;;}}}
 ;;{{{ Customizations
 
+;;;###autoload
 (defcustom linphone-show-contacts nil
   "Show address book content on startup.
 In fact, address book visibility can be toggled at any time from the
@@ -80,16 +61,19 @@ control panel. This option merely defines the state to start with."
   :type 'boolean
   :group 'linphone)
 
-;;;###autoload
-(defcustom linphone-register-command-format "register %s %s %s"
+;;}}}
+;;{{{ Control data
+
+(defconst linphone-register-command-format "register %s %s %s"
   "Linphone register command format.
 The string placeholders are to be replaced by your identity,
-proxy host name and your password."
-  :type 'string
-  :group 'linphone-backend)
+proxy host name and your password.")
 
 ;;}}}
 ;;{{{ Utilities
+
+(defvar linphone-display-codecs (cons nil 'linphone-codecs-list-refresh)
+  "Linphone log visibility control.")
 
 (defvar linphone-display-contacts (cons linphone-show-contacts 'linphone-contacts-refresh)
   "Linphone log visibility control.")
@@ -247,7 +231,11 @@ the constructed panel will be popped up."
       (linphone-quit-button)
       (widget-insert "    ")
       (linphone-customize-button))
+    (widget-insert "\n\n")
+    (linphone-toggle-list-visibility-button linphone-display-codecs "Audio codecs")
     (widget-insert "\n")
+    (when (car linphone-display-codecs)
+      (linphone-codecs-show))
     (linphone-panel-footer)
     (widget-setup)
     (widget-forward 1))
