@@ -1,3 +1,14 @@
+linphone-el (3.2-0bionic1) bionic; urgency=medium
+
+  * New upstream release.
+  * Dropped apparently surplus customizations.
+  * Implemented audio codecs control.
+  * Microphone control improvement.
+  * Call transfering facility.
+  * General byte compilation improvements.
+
+ -- Igor B. Poretsky <poretsky@mlbox.ru>  Tue, 14 Jan 2025 07:57:56 +0300
+
 linphone-el (3.1-0bionic1) bionic; urgency=medium
 
   * New upstream release.
