@@ -69,15 +69,6 @@
 (require 'custom)
 
 ;;}}}
-;;{{{ Forward declarations
-
-(declare-function linphone-contacts-extract "linphone-contacts-core")
-(declare-function linphone-contacts-recognize "linphone-contacts-core" (info))
-(declare-function linphone-log-acquire "linphone-log")
-(declare-function linphone-schedule-log-update "linphone-display")
-(declare-function linphone-general-control "linphone-display" (&optional show))
-
-;;}}}
 ;;{{{ Customizations
 
 (defvar linphone-sounds-directory
@@ -85,7 +76,9 @@
   "Directory where sound icons are stored.")
 
 ;;;###autoload
-(defgroup linphone '((linphone-logs custom-group))
+(defgroup linphone
+  '((linphone-show-contacts custom-variable)
+    (linphone-logs custom-group))
   "Internet telephone."
   :group 'applications)
 
@@ -93,11 +86,7 @@
   "Sound icons for various events."
   :group 'linphone)
 
-(defgroup linphone-backend
-  '((linphone-call-command-format custom-variable)
-    (linphone-log-get-command custom-variable)
-    (linphone-contacts-delete-command-format custom-variable)
-    (linphone-register-command-format custom-variable))
+(defgroup linphone-backend nil
   "Communications with external backend programs.
 Don't touch this stuff unless you really know what you are doing."
   :group 'linphone)
@@ -127,16 +116,21 @@ at any time. This option only defines the state to start with."
 (defcustom linphone-mic-gain nil
   "Microphone gain level in percents.
 The value must be in the range 0 through 100 inclusively.
-if nil is specified, then the current level will be left untouched."
+if nil is specified, then microphone settings will be left untouched.
+Any other non-numeric value means that microphone will be unmuted,
+but its gain level left unchanged."
   :type '(choice (const :tag "Untouched" nil)
+                 (const :tag "Only unmuted" t)
                  (integer :tag "Explicit value in percents"))
   :initialize 'custom-initialize-default
   :set (lambda (symbol value)
-         (cl-declare (special linphone-mic-tune-command))
-         (when value
+         (cl-declare (special linphone-mic-tune-command
+                              linphone-call-active))
+         (when (numberp value)
            (when (or (< value 0) (> value 100))
              (error "Linphone microphone gain value is out of range"))
-           (call-process-shell-command (format linphone-mic-tune-command value)))
+           (when linphone-call-active
+             (call-process-shell-command (format linphone-mic-tune-command value))))
          (custom-set-default symbol value))
   :set-after '(linphone-mic-tune-command)
   :group 'linphone)
@@ -185,12 +179,7 @@ It can help when the native one doesn't do the work properly."
   :type '(repeat string)
   :group 'linphone-backend)
 
-(defcustom linphone-mute-command "amixer set Capture,0 nocap"
-  "Shell command that effectively mutes microphone."
-  :type 'string
-  :group 'linphone-backend)
-
-(defcustom linphone-unmute-command "amixer set Capture,0 cap"
+(defcustom linphone-mic-unmute-command "amixer set Capture,0 cap"
   "Shell command that effectively unmutes microphone."
   :type 'string
   :group 'linphone-backend)
@@ -202,37 +191,28 @@ parameter to be replaced by actual gain value."
   :type 'string
   :group 'linphone-backend)
 
-(defcustom linphone-autoanswer-enable-command "autoanswer enable"
-  "The command string to turn autoanswer mode on."
-  :type 'string
-  :group 'linphone-backend)
+;;}}}
+;;{{{ Control data
 
-(defcustom linphone-quit-command "quit"
-  "Linphone quit command string."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-autoanswer-enable-command "autoanswer enable"
+  "The command string to turn autoanswer mode on.")
 
-(defcustom linphone-prompt-pattern "^linphonec> "
-  "Regular expression that matches against Linphone backend prompt."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-quit-command "quit"
+  "Linphone quit command string.")
 
-(defcustom linphone-call-request-pattern "^\\(.*\\) is contacting you"
-  "Regular expression that matches against incoming call request."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-prompt-pattern "^linphonec> "
+  "Regular expression that matches against Linphone backend prompt.")
 
-(defcustom linphone-call-progress-pattern "^Contacting \\(.*\\)$"
-  "Regular expression that matches progress notification message."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-call-request-pattern "^\\(.*\\) is contacting you"
+  "Regular expression that matches against incoming call request.")
 
-(defcustom linphone-call-connection-pattern "Connected\\.$"
-  "Regular expression that matches against connection acknowledge."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-call-progress-pattern "^Contacting \\(.*\\)$"
+  "Regular expression that matches progress notification message.")
 
-(defcustom linphone-call-failure-patterns
+(defconst linphone-call-connection-pattern "Connected\\.$"
+  "Regular expression that matches against connection acknowledge.")
+
+(defconst linphone-call-failure-patterns
   '("User is \\(busy\\|temporarily unavailable\\)"
     "Not Acceptable Here"
     "Forbidden"
@@ -242,64 +222,39 @@ parameter to be replaced by actual gain value."
     "Request Timeout"
     "Internal Server Error"
     "Bad request")
-  "Regular expressions that matches against call failure messages."
-  :type '(repeat regexp)
-  :group 'linphone-backend)
+  "Regular expressions that matches against call failure messages.")
 
-(defcustom linphone-call-termination-pattern "Call \\(terminat\\|end\\)ed\\|No active call"
-  "Regular expression that matches against call termination message."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-call-termination-pattern "Call \\(terminat\\|end\\)ed\\|No active call"
+  "Regular expression that matches against call termination message.")
 
-(defcustom linphone-missed-call-pattern "^You have missed [0-9]+ calls?"
-  "Regular expression that matches against missed call message."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-missed-call-pattern "^You have missed [0-9]+ calls?"
+  "Regular expression that matches against missed call message.")
 
-(defcustom linphone-online-state-string "successful"
-  "Online status indication string."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-online-state-string "successful"
+  "Online status indication string.")
 
-(defcustom linphone-offline-state-pattern "failed"
-  "Regular expression that matches against offline indication strings."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-offline-state-pattern "failed"
+  "Regular expression that matches against offline indication strings.")
 
-(defcustom linphone-registration-result-pattern "Registration on \\(.*\\) \\(%s\\)"
+(defconst linphone-registration-result-pattern "Registration on \\(.*\\) \\(%s\\)"
   "Regular expression pattern that matches against registration result
 messages. The string placeholder is to be replaced by the status
-matching regexp constructed from the online and offline patterns."
-  :type 'string
-  :group 'linphone-backend)
+matching regexp constructed from the online and offline patterns.")
 
-(defcustom linphone-unreg-state-pattern "registered=-?[0-9]+"
-  "Regexp matching no registration status message."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-unreg-state-pattern "registered=-?[0-9]+"
+  "Regexp matching no registration status message.")
 
-(defcustom linphone-answer-mode-change-pattern "Auto answer \\(en\\|dis\\)abled"
-  "Regexp matching answer mode change messages."
-  :type 'regexp
-  :group 'linphone-backend)
+(defconst linphone-answer-mode-change-pattern "Auto answer \\(?:en\\|dis\\)abled"
+  "Regexp matching answer mode change messages.")
+
+(defconst linphone-codec-status-change-pattern "^ *[0-9]+: \\(.+\\) \\(\\(?:en\\|dis\\)abled\\)$"
+  "Regexp matching codec status change messages.")
 
 ;;}}}
 ;;{{{ Utilities
 
 (defvar linphone-mic-muted nil
   "Indicates that the microphone is muted.")
-
-(defun linphone-mute ()
-  "Mute microphone."
-  (setq linphone-mic-muted t)
-  (call-process-shell-command linphone-mute-command))
-
-(defun linphone-unmute ()
-  "Unmute microphone."
-  (setq linphone-mic-muted nil)
-  (when (numberp linphone-mic-gain)
-    (call-process-shell-command (format linphone-mic-tune-command linphone-mic-gain)))
-  (call-process-shell-command linphone-unmute-command))
 
 (defun linphone-play-sound (icon)
   "Play a sound icon."
@@ -322,6 +277,9 @@ matching regexp constructed from the online and offline patterns."
 
 (defvar linphone-contacts-requested nil
   "Indicates that contact list was requested.")
+
+(defvar linphone-codecs-list-requested nil
+  "Indicates that codecs list was requested.")
 
 (defvar linphone-autoanswer nil
   "Indicates automatic answer mode.")
@@ -413,7 +371,6 @@ panel should be updated after updating log or contact list info."
               (add-to-list 'linphone-pending-actions 'linphone-contacts-refresh 'append)))
         (when linphone-online
           (when linphone-call-active
-            (linphone-mute)
             (linphone-play-sound linphone-hangup-sound))
           (unless (eq linphone-current-control 'linphone-notification)
             (setq linphone-current-control 'linphone-general-control))
@@ -438,23 +395,33 @@ panel should be updated after updating log or contact list info."
         (setq linphone-log-requested nil
               linphone-control-change (or linphone-control-change
                                           (linphone-list-display-update)))))
+     (linphone-codecs-list-requested
+      (when linphone-backend-ready
+        (linphone-codecs-list-extract)
+        (setq linphone-codecs-list-requested nil
+              linphone-control-change (or linphone-control-change
+                                          (linphone-list-display-update)))))
      ((re-search-backward linphone-unreg-state-pattern nil t)
       (when linphone-online
         (linphone-play-sound linphone-offline-sound)
         (setq linphone-online nil
               linphone-control-change t)))
      ((re-search-backward linphone-answer-mode-change-pattern nil t)
-      (message "%s" (match-string 0)) nil)
+      (message "%s" (match-string 0)))
+     ((re-search-backward linphone-codec-status-change-pattern nil t)
+      (message "The %s audio codec is %s" (match-string 1) (match-string 2)))
      ((and linphone-online
            (re-search-backward linphone-call-connection-pattern nil t))
-      (linphone-unmute)
+      (when linphone-mic-gain
+        (when (numberp linphone-mic-gain)
+          (call-process-shell-command (format linphone-mic-tune-command linphone-mic-gain)))
+        (call-process-shell-command linphone-mic-unmute-command))
       (setq linphone-call-active t
+            linphone-mic-muted nil
             linphone-current-control 'linphone-active-call-control
             linphone-control-change t))
      ((and linphone-online
            (re-search-backward linphone-call-termination-pattern nil t))
-      (when linphone-call-active
-        (linphone-mute))
       (linphone-play-sound linphone-hangup-sound)
       (when (get-buffer linphone-control-panel)
         (linphone-schedule-log-update))
@@ -489,8 +456,6 @@ panel should be updated after updating log or contact list info."
                     (cdr linphone-call-failure-patterns))
               pattern)
             nil t))
-      (when linphone-call-active
-        (linphone-mute))
       (linphone-play-sound linphone-hangup-sound)
       (when (get-buffer linphone-control-panel)
         (linphone-schedule-log-update))
@@ -545,6 +510,7 @@ panel should be updated after updating log or contact list info."
     (setq linphone-backend-ready nil
           linphone-online nil
           linphone-call-active nil
+          linphone-codecs-list-requested nil
           linphone-contacts-requested nil
           linphone-log-requested nil
           linphone-autoanswer linphone-answer-mode

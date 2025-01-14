@@ -37,43 +37,23 @@
 ;;}}}
 ;;{{{ Requirements
 
-(require 'cl-lib)
-(require 'custom)
 (require 'widget)
 (eval-when-compile
   (require 'wid-edit))
 
-(cl-eval-when (load)
-  (require 'linphone)
-  (require 'linphone-contacts-core)
-  (require 'linphone-contacts-lib))
+(require 'linphone)
+(require 'linphone-contacts-core)
+(require 'linphone-contacts-lib)
 
 ;;}}}
-;;{{{ Forward declarations
+;;{{{ Control data
 
-(declare-function linphone-command "linphone" (command))
-(declare-function linphone-contacts-add "linphone-contacts-lib" (name address))
-(declare-function linphone-contacts-call-button "linphone-contacts-lib" (id name))
-
-(defvar linphone-pending-actions)
-(defvar linphone-contacts-list)
-(defvar linphone-online)
-(defvar linphone-call-active)
-
-;;}}}
-;;{{{ Customizations
-
-;;;###autoload
-(defcustom linphone-contacts-delete-command-format "friend delete %d"
+(defconst linphone-contacts-delete-command-format "friend delete %d"
   "Format string to construct a contact delete command.
-The number placeholder is to be replaced by the contact index."
-  :type 'string
-  :group 'linphone-backend)
+The number placeholder is to be replaced by the contact index.")
 
-(defcustom linphone-contacts-clear-command "friend delete all"
-  "Command string to clear all contacts info."
-  :type 'string
-  :group 'linphone-backend)
+(defconst linphone-contacts-clear-command "friend delete all"
+  "Command string to clear all contacts info.")
 
 ;;}}}
 ;;{{{ Utility functions
